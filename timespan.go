@@ -52,21 +52,14 @@ func filter(timeSpans List, filterFunc func(T) bool) List {
 	return filtered
 }
 
-func (ts List) timesOverlap(a, b T, allowContiguous bool) bool {
-	if a.End().Equal(b.End()) && a.Start().Equal(b.Start()) {
-		// If they start and end at the same instant
+func overlap(a, b T, allowContiguous bool) bool {
+	if b.Start().Before(a.Start()) {
+		a, b = b, a
+	}
+	if allowContiguous && a.End() == b.Start() {
 		return true
 	}
-
-	if !allowContiguous {
-		// a ends after b starts, and a starts before b ends.
-		return a.End().After(b.Start()) && a.Start().Before(b.End())
-	}
-
-	// if (a ends after b starts, or ends at the same time that b starts) | (a starts before b ends, or starts at the
-	// same time that b ends)
-	return (a.End().After(b.Start()) || a.End().Equal(b.Start())) &&
-		(a.Start().Before(b.End()) || a.Start().Equal(b.End()))
+	return !a.End().Before(b.Start())
 }
 
 // UnionWithHandler returns a list of TimeSpans representing the union of all of the time spans.
@@ -89,7 +82,7 @@ func (ts List) UnionWithHandler(mergeHandlerFunc MergeHandlerFunc) List {
 		// A: current timespan in merged array; B: current timespan in sorted array
 		// If B overlaps with A, it can be merged with A.
 		a := result[len(result)-1]
-		if ts.timesOverlap(a, b, true) {
+		if overlap(a, b, true) {
 			result[len(result)-1] = mergeHandlerFunc(a, b, a.Start(), getMaxTime(a.End(), b.End()))
 			continue
 		}
@@ -133,7 +126,7 @@ func (ts List) IntersectionWithHandler(intersectHandlerFunc IntersectionHandlerF
 		})
 
 		for _, a := range actives {
-			if ts.timesOverlap(a, b, false) {
+			if overlap(a, b, false) {
 				start := getMaxTime(b.Start(), a.Start())
 				end := getMinTime(b.End(), a.End())
 				intersection := intersectHandlerFunc(a, b, start, end)
