@@ -1,6 +1,7 @@
 # Spaniel
 *Time span handling for Go*
 
+[![godoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/senseyeio/spaniel) [![license](https://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/senseyeio/spaniel/master/LICENSE) [![build](https://img.shields.io/travis/senseyeio/spaniel.svg?style=flat)](https://travis-ci.org/senseyeio/spaniel)
 
 **Spaniel** contains functionality for timespan handling, specifically for merging overlapping timespans and finding the overlaps between multiple timespans.
 
