@@ -44,19 +44,19 @@ func main() {
 
 	var now = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
 
-	input := timespan.List{
+	input := spaniel.List{
 		NewPropertyEvent(now, now.Add(1*time.Hour), []string{"1"}),
 		NewPropertyEvent(now.Add(30*time.Minute), now.Add(90*time.Minute), []string{"2"}),
 	}
 
-	var mergeHandlerFunc timespan.MergeHandlerFunc = func(mergeInto, mergeFrom timespan.T, start, end time.Time) timespan.T {
+	var mergeHandlerFunc spaniel.MergeHandlerFunc = func(mergeInto, mergeFrom spaniel.T, start, end time.Time) spaniel.T {
 		a := mergeInto.(*PropertyEvent)
 		b := mergeFrom.(*PropertyEvent)
 		// Return your object that implements timespan.T
 		return NewPropertyEvent(start, end, mergeProperties(a.Properties, b.Properties))
 	}
 
-	var intersectionHandlerFunc timespan.IntersectionHandlerFunc = func(intersectingEvent1, intersectingEvent2 timespan.T, start, end time.Time) timespan.T {
+	var intersectionHandlerFunc spaniel.IntersectionHandlerFunc = func(intersectingEvent1, intersectingEvent2 spaniel.T, start, end time.Time) spaniel.T {
 		a := intersectingEvent1.(*PropertyEvent)
 		b := intersectingEvent2.(*PropertyEvent)
 		// Return your object that implements timespan.T

@@ -1,4 +1,4 @@
-package timespan
+package spaniel
 
 import (
 	"time"

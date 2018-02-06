@@ -1,4 +1,4 @@
-package timespan_test
+package spaniel_test
 
 import (
 	"sort"
@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	"github.com/senseyeio/spaniel"
+	"bitbucket.org/senseye/sensightlibs/go/timespan"
 )
 
 type Event struct {
@@ -67,14 +68,14 @@ func TestHandlers(t *testing.T) {
 		return a
 	}
 
-	var mergePropertiesFunc = func(mergeInto timespan.T, mergeFrom timespan.T, start time.Time, end time.Time) timespan.T {
+	var mergePropertiesFunc = func(mergeInto spaniel.T, mergeFrom spaniel.T, start time.Time, end time.Time) spaniel.T {
 		// The union will contain the properties from both merged events
 		a := mergeInto.(*PropertyEvent)
 		b := mergeFrom.(*PropertyEvent)
 		return NewPropertyEvent(start, end, mergeProperties(a.Properties, b.Properties))
 	}
 
-	var intersectPropertiesFunc = func(intersectingEvent1 timespan.T, intersectingEvent2 timespan.T, start time.Time, end time.Time) timespan.T {
+	var intersectPropertiesFunc = func(intersectingEvent1 spaniel.T, intersectingEvent2 spaniel.T, start time.Time, end time.Time) spaniel.T {
 		// The intersection will contain the properties from both intersecting events
 		a := intersectingEvent1.(*PropertyEvent)
 		b := intersectingEvent2.(*PropertyEvent)
@@ -84,7 +85,7 @@ func TestHandlers(t *testing.T) {
 
 	t.Run("Should allow a combination of union and intersection with handlers", func(t *testing.T) {
 		// Input timestamps are merged
-		inputTimeSpans := timespan.List{
+		inputTimeSpans := spaniel.List{
 			NewPropertyEvent(now, now.Add(time.Hour), []string{}),                            // 00:00 - 01:00
 			NewPropertyEvent(now.Add(30*time.Minute), now.Add(30*time.Minute), []string{}),   // An instantaneous event at 00:30
 			NewPropertyEvent(now.Add(90*time.Minute), now.Add(2*time.Hour), []string{}),      // 01:30 - 02:00
@@ -92,19 +93,19 @@ func TestHandlers(t *testing.T) {
 		}
 
 		mergedInputTimeSpans := inputTimeSpans.UnionWithHandler(mergePropertiesFunc)
-		expectEqual(t, mergedInputTimeSpans, timespan.List{
+		expectEqual(t, mergedInputTimeSpans, spaniel.List{
 			NewPropertyEvent(now, now.Add(time.Hour), []string{}),                           // 00:00 - 01:00
 			NewPropertyEvent(now.Add(90*time.Minute), now.Add(130*time.Minute), []string{}), // 01:30 - 02:10
 		})
 
 		// Get some property timespans
-		propSpans1 := timespan.List{
+		propSpans1 := spaniel.List{
 			NewPropertyEvent(now.Add(10*time.Minute), now.Add(25*time.Minute), []string{"prop1"}),  // 00:10 - 00:25
 			NewPropertyEvent(now.Add(50*time.Minute), now.Add(100*time.Minute), []string{"prop1"}), // 00:50 - 01:40
 			NewPropertyEvent(now.Add(55*time.Minute), now.Add(60*time.Minute), []string{"prop1"}),  // 00:55 - 01:35
 		}.UnionWithHandler(mergePropertiesFunc)
 
-		expectEqual(t, propSpans1, timespan.List{
+		expectEqual(t, propSpans1, spaniel.List{
 			NewPropertyEvent(now.Add(10*time.Minute), now.Add(25*time.Minute), []string{"prop1"}),  // 00:10 - 00:25
 			NewPropertyEvent(now.Add(50*time.Minute), now.Add(100*time.Minute), []string{"prop1"}), // 00:50 - 01:40
 		})
@@ -112,18 +113,18 @@ func TestHandlers(t *testing.T) {
 		// Intersect the property spans with the input timespans
 		intersectionPropSpans1 := append(propSpans1, mergedInputTimeSpans...).IntersectionWithHandler(intersectPropertiesFunc)
 
-		expectEqual(t, intersectionPropSpans1, timespan.List{
+		expectEqual(t, intersectionPropSpans1, spaniel.List{
 			NewPropertyEvent(now.Add(10*time.Minute), now.Add(25*time.Minute), []string{"prop1"}),  // 00:10 - 00:25
 			NewPropertyEvent(now.Add(50*time.Minute), now.Add(60*time.Minute), []string{"prop1"}),  // 00:50 - 01:00
 			NewPropertyEvent(now.Add(90*time.Minute), now.Add(100*time.Minute), []string{"prop1"}), // 01:30 - 01:40
 		})
 
-		propSpans2 := timespan.List{
+		propSpans2 := spaniel.List{
 			NewPropertyEvent(now.Add(35*time.Minute), now.Add(110*time.Minute), []string{"prop2"}), // 00:35 - 01:50
 			NewPropertyEvent(now.Add(2*time.Hour), now.Add(150*time.Minute), []string{"prop2"}),    // 02:00 - 02:30
 		}.UnionWithHandler(mergePropertiesFunc)
 
-		expectEqual(t, propSpans2, timespan.List{
+		expectEqual(t, propSpans2, spaniel.List{
 			NewPropertyEvent(now.Add(35*time.Minute), now.Add(110*time.Minute), []string{"prop2"}), // 00:35 - 01:50
 			NewPropertyEvent(now.Add(2*time.Hour), now.Add(150*time.Minute), []string{"prop2"}),    // 02:00 - 02:30
 		})
@@ -132,7 +133,7 @@ func TestHandlers(t *testing.T) {
 		intersectionPropSpans2 := append(propSpans2, mergedInputTimeSpans...).IntersectionWithHandler(intersectPropertiesFunc)
 
 
-		expectEqual(t, intersectionPropSpans2, timespan.List{
+		expectEqual(t, intersectionPropSpans2, spaniel.List{
 			NewPropertyEvent(now.Add(35*time.Minute), now.Add(60*time.Minute), []string{"prop2"}),   // 00:35 - 01:00
 			NewPropertyEvent(now.Add(90*time.Minute), now.Add(110*time.Minute), []string{"prop2"}),  // 01:30 - 01:50
 			NewPropertyEvent(now.Add(120*time.Minute), now.Add(130*time.Minute), []string{"prop2"}), // 02:00 - 02:10
@@ -141,7 +142,7 @@ func TestHandlers(t *testing.T) {
 		// Merge the intersected rule spans
 		outputPropSpans := append(intersectionPropSpans1, intersectionPropSpans2...).UnionWithHandler(mergePropertiesFunc)
 
-		expectEqual(t, outputPropSpans, timespan.List{
+		expectEqual(t, outputPropSpans, spaniel.List{
 			NewPropertyEvent(now.Add(10*time.Minute), now.Add(25*time.Minute), []string{"prop1"}),
 			NewPropertyEvent(now.Add(35*time.Minute), now.Add(1*time.Hour), []string{"prop1", "prop2"}),
 			NewPropertyEvent(now.Add(90*time.Minute), now.Add(110*time.Minute), []string{"prop1", "prop2"}),
