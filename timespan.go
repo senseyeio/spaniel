@@ -15,8 +15,8 @@ const (
 type T interface {
 	Start() time.Time
 	End() time.Time
-	LeftType() IntervalType
-	RightType() IntervalType
+	StartType() IntervalType
+	EndType() IntervalType
 }
 
 // List represents a list of timespans, on which other functions operate.
@@ -78,14 +78,14 @@ func contiguous(a, b T) bool {
 		a, b = b, a
 	}
 
-	aRightType := a.RightType()
-	bLeftType := b.LeftType()
+	aEndType := a.EndType()
+	bStartType := b.StartType()
 
 	if IsInstant(a) {
-		aRightType = Closed
+		aEndType = Closed
 	}
 	if IsInstant(b) {
-		bLeftType = Closed
+		bStartType = Closed
 	}
 
 	// To be contiguous the ranges have to overlap on the first/last time
@@ -93,7 +93,7 @@ func contiguous(a, b T) bool {
 		return false
 	}
 
-	if aRightType == bLeftType {
+	if aEndType == bStartType {
 		return false
 	}
 	return true
@@ -106,18 +106,18 @@ func overlap(a, b T) bool {
 	// [1,2,3,4] (4,5,6,7] - doesn't intersect
 	// [1,2,3,4) (4,5,6,7] - doesn't intersect
 
-	aLeftType := a.LeftType()
-	aRightType := a.RightType()
-	bLeftType := b.LeftType()
-	bRightType := b.RightType()
+	aStartType := a.StartType()
+	aEndType := a.EndType()
+	bStartType := b.StartType()
+	bEndType := b.EndType()
 
 	if IsInstant(a) {
-		aLeftType = Closed
-		aRightType = Closed
+		aStartType = Closed
+		aEndType = Closed
 	}
 	if IsInstant(b) {
-		bLeftType = Closed
-		bRightType = Closed
+		bStartType = Closed
+		bEndType = Closed
 	}
 
 	// Given [a_s,a_e] and [b_s,b_e]
@@ -127,14 +127,14 @@ func overlap(a, b T) bool {
 	if a.Start().After(b.End()) {
 		c_1 = true
 	} else if a.Start().Equal(b.End()) {
-		c_1 = (aLeftType == Open || bRightType == Open)
+		c_1 = (aStartType == Open || bEndType == Open)
 	}
 
 	c_2 := false // is a_e before b_s
 	if a.End().Before(b.Start()) {
 		c_2 = true
 	} else if a.End().Equal(b.Start()) {
-		c_2 = (aRightType == Open || bLeftType == Open)
+		c_2 = (aEndType == Open || bStartType == Open)
 	}
 
 	if c_1 || c_2 {

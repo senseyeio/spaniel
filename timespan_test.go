@@ -12,8 +12,8 @@ import (
 type Event struct {
 	start time.Time
 	end   time.Time
-	leftType timespan.IntervalType
-	rightType timespan.IntervalType
+	startType timespan.IntervalType
+	endType timespan.IntervalType
 }
 
 func NewEvent(start time.Time, end time.Time) *Event {
@@ -27,20 +27,20 @@ func (e *Event) End() time.Time {
 	return e.end
 }
 
-func (e *Event) LeftType() timespan.IntervalType {
-	return e.leftType
+func (e *Event) StartType() timespan.IntervalType {
+	return e.startType
 }
 
-func (e *Event) RightType() timespan.IntervalType {
-	return e.rightType
+func (e *Event) EndType() timespan.IntervalType {
+	return e.endType
 }
 
-func (e *Event) SetLeftType(leftType timespan.IntervalType) {
-	e.leftType = leftType
+func (e *Event) SetStartType(startType timespan.IntervalType) {
+	e.startType = startType
 }
 
-func (e *Event) SetRightType(rightType timespan.IntervalType) {
-	e.rightType = rightType
+func (e *Event) SetEndType(endType timespan.IntervalType) {
+	e.endType = endType
 }
 
 func (e *Event) String() string {
@@ -260,10 +260,10 @@ func TestUnion(t *testing.T) {
 
 	t.Run("Should not merge two consecutive timespans if non-inclusive", func(t *testing.T) {
 		a := NewEvent(now, now.Add(time.Hour))
-		a.SetRightType(timespan.Open)
+		a.SetEndType(timespan.Open)
 
 		b := NewEvent(now.Add(time.Hour), now.Add(3*time.Hour))
-		b.SetLeftType(timespan.Open)
+		b.SetStartType(timespan.Open)
 		expected :=  timespan.List{a,b}
 		events := timespan.List{a, b}
 		after := events.Union()
