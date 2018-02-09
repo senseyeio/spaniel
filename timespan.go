@@ -5,10 +5,18 @@ import (
 	"time"
 )
 
+type IntervalType int
+const (
+	Open IntervalType = iota
+	Closed
+)
+
 // T represents a basic timespan, with a start and end time.
 type T interface {
 	Start() time.Time
 	End() time.Time
+	LeftType() IntervalType
+	RightType() IntervalType
 }
 
 // List represents a list of timespans, on which other functions operate.
@@ -52,14 +60,84 @@ func filter(timeSpans List, filterFunc func(T) bool) List {
 	return filtered
 }
 
-func overlap(a, b T, allowContiguous bool) bool {
-	if b.Start().Before(a.Start()) {
-		a, b = b, a
+func IsInstant(a T) bool {
+	return a.Start().Equal(a.End())
+}
+
+func timeWithin(a time.Time, b T, contiguous bool) bool {
+	if contiguous || b.LeftType() == Closed {
+		if a.Equal(b.Start()) {
+			return true
+		}
 	}
-	if allowContiguous && a.End() == b.Start() {
-		return true
+
+	if contiguous || b.RightType() == Closed {
+		if a.Equal(b.End()) {
+			return true
+		}
 	}
-	return !a.End().Before(b.Start())
+
+	return a.After(b.Start()) && a.Before(b.End())
+}
+
+
+
+func overlap(a, b T, contiguous bool) bool {
+
+	// [x,y] // includes x and y
+	// [x,y) // excludes y
+	// (x,y] // excludes x
+	// (x,y) // excludes x and y
+	// closed: included []
+	// open: excluded ()
+
+	// If we use an instant (i.e. start == end), it doesn't use
+	// left and right types.
+
+	if IsInstant(a) {
+		return timeWithin(a.Start(), b, contiguous)
+	}
+	if IsInstant(b) {
+		return timeWithin(b.Start(), a, contiguous)
+	}
+
+	// Given [e,g] and [f,h]
+	// If e > h || g < f, overlap == false
+
+	c_1 := false // is a_s after b_e
+	if a.Start().After(b.End()) {
+		// given 5,6,7 and 1,2,3,4
+		c_1 = true
+	}
+	if a.Start().Equal(b.End()) {
+		// given 5,6,7 and 1,2,3,4,5
+		if contiguous || (a.LeftType() == Closed && b.RightType() == Closed) {
+			// a: 5,6,7 b: 1,2,3,4,5
+		} else {
+			c_1 = true
+		}
+	}
+
+	c_2 := false // is a_e before b_s
+	if a.End().Before(b.Start()) {
+		c_2 = true
+	}
+	if a.End().Equal(b.Start()) {
+		// given 1,2,3,4,5 and 5,6,7,8
+		if contiguous || (a.RightType() == Closed && b.LeftType() == Closed) {
+			// a: 1, 2, 3, 4, 5
+			// b: 5, 6, 7, 8
+			// not before
+		} else {
+			c_2 = true
+		}
+	}
+
+	if c_1 || c_2 {
+		return false
+	}
+
+	return true
 }
 
 // UnionWithHandler returns a list of TimeSpans representing the union of all of the time spans.

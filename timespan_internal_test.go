@@ -73,7 +73,7 @@ func TestOverlap(t *testing.T) {
 			name: "span vs instant, overlap on the start border",
 			a:    NewEmpty(t1, t3),
 			b:    NewEmpty(t1, t1),
-			expectedNonContiguous:   false,
+			expectedNonContiguous:   true,
 			expectedAllowContiguous: true,
 		}, {
 			//    [--a--]
@@ -81,7 +81,7 @@ func TestOverlap(t *testing.T) {
 			name: "span vs instant, overlap in the middle",
 			a:    NewEmpty(t1, t3),
 			b:    NewEmpty(t2, t2),
-			expectedNonContiguous:   false,
+			expectedNonContiguous:   true,
 			expectedAllowContiguous: true,
 		}, {
 			//    [--a--]

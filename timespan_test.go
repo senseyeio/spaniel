@@ -7,6 +7,7 @@ import (
 	"reflect"
 
 	timespan "github.com/senseyeio/spaniel"
+	"fmt"
 )
 
 type Event struct {
@@ -23,6 +24,14 @@ func (e *Event) Start() time.Time {
 }
 func (e *Event) End() time.Time {
 	return e.end
+}
+
+func (e *Event) LeftType() timespan.IntervalType {
+	return timespan.Closed
+}
+
+func (e *Event) RightType() timespan.IntervalType {
+	return timespan.Open
 }
 
 func (e *Event) String() string {
@@ -185,6 +194,7 @@ func TestUnion(t *testing.T) {
 	})
 
 	t.Run("Should merge two consecutive timespans", func(t *testing.T) {
+		fmt.Println("2 cons")
 		a := timespan.NewEmpty(now, now.Add(time.Hour))
 		b := timespan.NewEmpty(now.Add(time.Hour), now.Add(3*time.Hour))
 		expected :=  timespan.List{timespan.NewEmpty(a.Start(), b.End())}
