@@ -23,88 +23,88 @@ func TestOverlap(t *testing.T) {
 			//  [--a--]
 			//          [--b--]
 			name: "no overlap",
-			a:    NewEmpty(t1, t2),
-			b:    NewEmpty(t3, t4),
+			a:    NewEmptyTyped(t1, t2),
+			b:    NewEmptyTyped(t3, t4),
 			expectedOverlap:   false,
 			expectedContiguous: false,
 		}, {
 			//  [--a--]
 			//        [--b--]
 			name: "contiguous",
-			a:    NewEmpty(t1, t2),
-			b:    NewEmpty(t2, t3),
+			a:    NewEmptyTyped(t1, t2),
+			b:    NewEmptyTyped(t2, t3),
 			expectedOverlap:   false,
 			expectedContiguous: true,
 		}, {
 			//  [---a----]
 			//        [---b----]
 			name: "small intersection",
-			a:    NewEmpty(t1, t3),
-			b:    NewEmpty(t2, t4),
+			a:    NewEmptyTyped(t1, t3),
+			b:    NewEmptyTyped(t2, t4),
 			expectedOverlap:   true,
 			expectedContiguous: false,
 		}, {
 			//  [------a------]
 			//      [--b--]
 			name: "one inside the other",
-			a:    NewEmpty(t1, t4),
-			b:    NewEmpty(t2, t3),
+			a:    NewEmptyTyped(t1, t4),
+			b:    NewEmptyTyped(t2, t3),
 			expectedOverlap:   true,
 			expectedContiguous: false,
 		}, {
 			//  [--a--]
 			//  [--b--]
 			name: "same",
-			a:    NewEmpty(t1, t2),
-			b:    NewEmpty(t1, t2),
+			a:    NewEmptyTyped(t1, t2),
+			b:    NewEmptyTyped(t1, t2),
 			expectedOverlap:   true,
 			expectedContiguous: false,
 		}, {
 			//  [--a--]
 			//           [b]
 			name: "span vs instant, no overlap",
-			a:    NewEmpty(t1, t3),
-			b:    NewEmpty(t4, t4),
+			a:    NewEmptyTyped(t1, t3),
+			b:    NewEmptyTyped(t4, t4),
 			expectedOverlap:   false,
 			expectedContiguous: false,
 		}, {
 			//    [--a--]
 			//    [b]
 			name: "span vs instant, overlap on the start border",
-			a:    NewEmpty(t1, t3),
-			b:    NewEmpty(t1, t1),
+			a:    NewEmptyTyped(t1, t3),
+			b:    NewEmptyTyped(t1, t1),
 			expectedOverlap:   true,
 			expectedContiguous: false,
 		}, {
 			//    [--a--]
 			//      [b]
 			name: "span vs instant, overlap in the middle",
-			a:    NewEmpty(t1, t3),
-			b:    NewEmpty(t2, t2),
+			a:    NewEmptyTyped(t1, t3),
+			b:    NewEmptyTyped(t2, t2),
 			expectedOverlap:   true,
 			expectedContiguous: false,
 		}, {
 			//    [--a--]
 			//        [b]
 			name: "span vs instant, overlap at the end",
-			a:    NewEmpty(t1, t3),
-			b:    NewEmpty(t3, t3),
+			a:    NewEmptyTyped(t1, t3),
+			b:    NewEmptyTyped(t3, t3),
 			expectedOverlap:   false,
 			expectedContiguous: true,
 		}, {
 			//    [a]
 			//         [b]
 			name: "both instants, no overlap",
-			a:    NewEmpty(t1, t1),
-			b:    NewEmpty(t2, t2),
+			a:    NewEmptyTyped(t1, t1),
+			b:    NewEmptyTyped(t2, t2),
 			expectedOverlap:   false,
 			expectedContiguous: false,
 		}, {
 			//    [a]
 			//    [b]
 			name: "both instants, overlap",
-			a:    NewEmpty(t1, t1),
-			b:    NewEmpty(t1, t1),
+			a:    NewEmptyTyped(t1, t1),
+			b:    NewEmptyTyped(t1, t1),
 			expectedOverlap:   true,
 			expectedContiguous: false,
 		},

@@ -30,24 +30,83 @@ func (s ByStart) Less(i, j int) bool { return s[i].Start().Before(s[j].Start())}
 
 // MergeHandlerFunc is used by UnionWithHandler to allow for custom functionality when two spans are merged.
 // It is passed the two timespans, and the start and end times of the new span.
-type MergeHandlerFunc func(mergeInto, mergeFrom T, start, end time.Time) T
+type MergeHandlerFunc func(mergeInto, mergeFrom T, start, end time.Time, startType, endType IntervalType) T
 
 // IntersectionHandlerFunc is used by IntersectionWithHandler to allow for custom functionality when two spans
 // intersect. It is passed the two timespans that intersect, and the start and end times at which they overlap.
-type IntersectionHandlerFunc func(intersectingEvent1, intersectingEvent2 T, start, end time.Time) T
+type IntersectionHandlerFunc func(intersectingEvent1, intersectingEvent2 T, start, end time.Time, startType, endType IntervalType) T
 
-func getMaxTime(a, b time.Time) time.Time {
-	if a.After(b) {
-		return a
+func getBestIntervalType(x, y IntervalType) IntervalType {
+	if x < y {
+		return x
 	}
-	return b
+	return y
 }
 
-func getMinTime(a, b time.Time) time.Time {
-	if a.Before(b) {
-		return a
+
+func getMinStart(a, b T) (time.Time, IntervalType) {
+
+	minStart := b.Start()
+	minType := b.StartType()
+
+	if a.Start().Before(b.Start()) {
+		minStart = a.Start()
 	}
-	return b
+
+	if a.StartType() == Closed && b.StartType() == Open {
+		minType = b.StartType()
+	}
+
+	return minStart, minType
+}
+
+func getMaxStart(a, b T) (time.Time, IntervalType) {
+
+	maxStart := b.Start()
+	maxType := b.StartType()
+
+	if a.Start().After(b.Start()) {
+		maxStart = a.Start()
+	}
+
+	if a.StartType() == Closed && b.StartType() == Open {
+		maxType = b.StartType()
+	}
+
+	return maxStart, maxType
+}
+
+
+func getMaxEnd(a, b T) (time.Time, IntervalType) {
+
+	maxEnd := b.End()
+	maxType := b.EndType()
+
+	if a.End().After(b.End()) {
+		maxEnd = a.End()
+	}
+
+	if a.EndType() == Closed && b.EndType() == Open {
+		maxType = b.EndType()
+	}
+
+	return maxEnd, maxType
+}
+
+func getMinEnd(a, b T) (time.Time, IntervalType) {
+
+	minEnd := b.End()
+	minType := b.EndType()
+
+	if a.End().Before(b.End()) {
+		minEnd = a.End()
+	}
+
+	if a.EndType() == Closed && b.EndType() == Open {
+		minType = b.EndType()
+	}
+
+	return minEnd, minType
 }
 
 func filter(timeSpans List, filterFunc func(T) bool) List {
@@ -165,7 +224,9 @@ func (ts List) UnionWithHandler(mergeHandlerFunc MergeHandlerFunc) List {
 		// If B overlaps with A, it can be merged with A.
 		a := result[len(result)-1]
 		if overlap(a, b) || contiguous(a,b) {
-			result[len(result)-1] = mergeHandlerFunc(a, b, a.Start(), getMaxTime(a.End(), b.End()))
+			maxTime, maxType := getMaxEnd(a, b)
+			minTime, minType := getMinStart(a, b)
+			result[len(result)-1] = mergeHandlerFunc(a, b, minTime, maxTime, minType, maxType)
 			continue
 		}
 		result = append(result, b)
@@ -178,10 +239,21 @@ func (ts List) UnionWithHandler(mergeHandlerFunc MergeHandlerFunc) List {
 // For example, given a list [A,B] where A and B overlap, a list [C] would be returned, with the timespan C spanning
 // both A and B.
 func (ts List) Union() List {
-	return ts.UnionWithHandler(func(mergeInto, mergeFrom T, start, end time.Time) T {
-		return NewEmpty(start, end)
+	return ts.UnionWithHandler(func(mergeInto, mergeFrom T, start, end time.Time, startType, endType IntervalType) T {
+		return NewEmpty(start, end, startType, endType)
 	})
 }
+
+
+
+// [1,2,3,4,5]  [4,5,6]    = [4,5]
+// [1,2,3,4,5) [4,5,6] = [4,5)
+
+// [10:00 - 13:00)     [12:00 - 14:00]   [12:00-13:00)
+
+
+// [10:00 - 13:00)
+//
 
 // IntersectionWithHandler returns a list of TimeSpans representing the overlaps between the contained time spans.
 // For example, given a list [A,B] where A and B overlap, a list [C] would be returned, with the timespan C covering
@@ -209,9 +281,10 @@ func (ts List) IntersectionWithHandler(intersectHandlerFunc IntersectionHandlerF
 
 		for _, a := range actives {
 			if overlap(a, b) {
-				start := getMaxTime(b.Start(), a.Start())
-				end := getMinTime(b.End(), a.End())
-				intersection := intersectHandlerFunc(a, b, start, end)
+				start, startType := getMaxStart(b, a)
+				end, endType := getMinEnd(b, a)
+
+				intersection := intersectHandlerFunc(a, b, start, end, startType, endType)
 				intersections = append(intersections, intersection)
 			}
 		}
@@ -224,7 +297,7 @@ func (ts List) IntersectionWithHandler(intersectHandlerFunc IntersectionHandlerF
 // For example, given a list [A,B] where A and B overlap, a list [C] would be returned,
 // with the timespan C covering the intersection of the A and B.
 func (ts List) Intersection() List {
-	return ts.IntersectionWithHandler(func(intersectingEvent1, intersectingEvent2 T, start, end time.Time) T {
-		return NewEmpty(start, end)
+	return ts.IntersectionWithHandler(func(intersectingEvent1, intersectingEvent2 T, start, end time.Time, startType, endType IntervalType) T {
+		return NewEmpty(start, end, startType, endType)
 	})
 }
