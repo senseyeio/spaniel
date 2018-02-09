@@ -16,8 +16,8 @@ func TestOverlap(t *testing.T) {
 	for _, tt := range []struct {
 		name                    string
 		a, b                    T
-		expectedNonContiguous   bool
-		expectedAllowContiguous bool
+		expectedOverlap   bool
+		expectedContiguous bool
 	}{
 		{
 			//  [--a--]
@@ -25,106 +25,106 @@ func TestOverlap(t *testing.T) {
 			name: "no overlap",
 			a:    NewEmpty(t1, t2),
 			b:    NewEmpty(t3, t4),
-			expectedNonContiguous:   false,
-			expectedAllowContiguous: false,
+			expectedOverlap:   false,
+			expectedContiguous: false,
 		}, {
 			//  [--a--]
 			//        [--b--]
 			name: "contiguous",
 			a:    NewEmpty(t1, t2),
 			b:    NewEmpty(t2, t3),
-			expectedNonContiguous:   false,
-			expectedAllowContiguous: true,
+			expectedOverlap:   false,
+			expectedContiguous: true,
 		}, {
 			//  [---a----]
 			//        [---b----]
 			name: "small intersection",
 			a:    NewEmpty(t1, t3),
 			b:    NewEmpty(t2, t4),
-			expectedNonContiguous:   true,
-			expectedAllowContiguous: true,
+			expectedOverlap:   true,
+			expectedContiguous: false,
 		}, {
 			//  [------a------]
 			//      [--b--]
 			name: "one inside the other",
 			a:    NewEmpty(t1, t4),
 			b:    NewEmpty(t2, t3),
-			expectedNonContiguous:   true,
-			expectedAllowContiguous: true,
+			expectedOverlap:   true,
+			expectedContiguous: false,
 		}, {
 			//  [--a--]
 			//  [--b--]
 			name: "same",
 			a:    NewEmpty(t1, t2),
 			b:    NewEmpty(t1, t2),
-			expectedNonContiguous:   true,
-			expectedAllowContiguous: true,
+			expectedOverlap:   true,
+			expectedContiguous: false,
 		}, {
 			//  [--a--]
 			//           [b]
 			name: "span vs instant, no overlap",
 			a:    NewEmpty(t1, t3),
 			b:    NewEmpty(t4, t4),
-			expectedNonContiguous:   false,
-			expectedAllowContiguous: false,
+			expectedOverlap:   false,
+			expectedContiguous: false,
 		}, {
 			//    [--a--]
 			//    [b]
 			name: "span vs instant, overlap on the start border",
 			a:    NewEmpty(t1, t3),
 			b:    NewEmpty(t1, t1),
-			expectedNonContiguous:   true,
-			expectedAllowContiguous: true,
+			expectedOverlap:   true,
+			expectedContiguous: false,
 		}, {
 			//    [--a--]
 			//      [b]
 			name: "span vs instant, overlap in the middle",
 			a:    NewEmpty(t1, t3),
 			b:    NewEmpty(t2, t2),
-			expectedNonContiguous:   true,
-			expectedAllowContiguous: true,
+			expectedOverlap:   true,
+			expectedContiguous: false,
 		}, {
 			//    [--a--]
 			//        [b]
 			name: "span vs instant, overlap at the end",
 			a:    NewEmpty(t1, t3),
 			b:    NewEmpty(t3, t3),
-			expectedNonContiguous:   false,
-			expectedAllowContiguous: true,
+			expectedOverlap:   false,
+			expectedContiguous: true,
 		}, {
 			//    [a]
 			//         [b]
 			name: "both instants, no overlap",
 			a:    NewEmpty(t1, t1),
 			b:    NewEmpty(t2, t2),
-			expectedNonContiguous:   false,
-			expectedAllowContiguous: false,
+			expectedOverlap:   false,
+			expectedContiguous: false,
 		}, {
 			//    [a]
 			//    [b]
 			name: "both instants, overlap",
 			a:    NewEmpty(t1, t1),
 			b:    NewEmpty(t1, t1),
-			expectedNonContiguous:   true,
-			expectedAllowContiguous: true,
+			expectedOverlap:   true,
+			expectedContiguous: false,
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			obtained := overlap(tt.a, tt.b, false)
-			if obtained != tt.expectedNonContiguous {
-				t.Errorf("in order, allowContiguous=false")
+			obtained := overlap(tt.a, tt.b)
+			if obtained != tt.expectedOverlap {
+				t.Errorf("in order, overlap")
 			}
-			obtained = overlap(tt.b, tt.a, false)
-			if obtained != tt.expectedNonContiguous {
-				t.Errorf("reversed, allowContiguous=false")
+			obtained = overlap(tt.b, tt.a)
+			if obtained != tt.expectedOverlap {
+				t.Errorf("reversed, overlap")
 			}
-			obtained = overlap(tt.a, tt.b, true)
-			if obtained != tt.expectedAllowContiguous {
-				t.Errorf("in order, allowContiguous=true")
+			obtained = contiguous(tt.a, tt.b)
+			if obtained != tt.expectedContiguous {
+				t.Errorf("in order, contiguous")
 			}
-			obtained = overlap(tt.b, tt.a, true)
-			if obtained != tt.expectedAllowContiguous {
-				t.Errorf("reversed, allowContiguous=true")
+			obtained = contiguous(tt.b, tt.a)
+			if obtained != tt.expectedContiguous {
+				t.Errorf("reversed, contiguous")
 			}
 		})
 	}

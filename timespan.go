@@ -64,73 +64,77 @@ func IsInstant(a T) bool {
 	return a.Start().Equal(a.End())
 }
 
-func timeWithin(a time.Time, b T, contiguous bool) bool {
-	if contiguous || b.LeftType() == Closed {
-		if a.Equal(b.Start()) {
-			return true
-		}
+
+
+// Returns true if two timespans are side by side
+func contiguous(a, b T) bool {
+	// [1,2,3,4] [4,5,6,7] - not contiguous
+	// [1,2,3,4) [4,5,6,7] - contiguous
+	// [1,2,3,4] (4,5,6,7] - contiguous
+	// [1,2,3,4) (4,5,6,7] - not contiguous
+	// [1,2,3] [5,6,7] - not contiguous
+
+	if b.Start().Before(a.Start()) {
+		a, b = b, a
 	}
 
-	if contiguous || b.RightType() == Closed {
-		if a.Equal(b.End()) {
-			return true
-		}
-	}
-
-	return a.After(b.Start()) && a.Before(b.End())
-}
-
-
-
-func overlap(a, b T, contiguous bool) bool {
-
-	// [x,y] // includes x and y
-	// [x,y) // excludes y
-	// (x,y] // excludes x
-	// (x,y) // excludes x and y
-	// closed: included []
-	// open: excluded ()
-
-	// If we use an instant (i.e. start == end), it doesn't use
-	// left and right types.
+	aRightType := a.RightType()
+	bLeftType := b.LeftType()
 
 	if IsInstant(a) {
-		return timeWithin(a.Start(), b, contiguous)
+		aRightType = Closed
 	}
 	if IsInstant(b) {
-		return timeWithin(b.Start(), a, contiguous)
+		bLeftType = Closed
 	}
 
-	// Given [e,g] and [f,h]
-	// If e > h || g < f, overlap == false
+	// To be contiguous the ranges have to overlap on the first/last time
+	if !(a.End().Equal(b.Start())) {
+		return false
+	}
+
+	if aRightType == bLeftType {
+		return false
+	}
+	return true
+}
+
+// Returns true if two timespans overlap
+func overlap(a, b T) bool {
+	// [1,2,3,4] [4,5,6,7] - intersects
+	// [1,2,3,4) [4,5,6,7] - doesn't intersect
+	// [1,2,3,4] (4,5,6,7] - doesn't intersect
+	// [1,2,3,4) (4,5,6,7] - doesn't intersect
+
+	aLeftType := a.LeftType()
+	aRightType := a.RightType()
+	bLeftType := b.LeftType()
+	bRightType := b.RightType()
+
+	if IsInstant(a) {
+		aLeftType = Closed
+		aRightType = Closed
+	}
+	if IsInstant(b) {
+		bLeftType = Closed
+		bRightType = Closed
+	}
+
+	// Given [a_s,a_e] and [b_s,b_e]
+	// If a_s > b_e || a_e < b_s, overlap == false
 
 	c_1 := false // is a_s after b_e
 	if a.Start().After(b.End()) {
-		// given 5,6,7 and 1,2,3,4
 		c_1 = true
-	}
-	if a.Start().Equal(b.End()) {
-		// given 5,6,7 and 1,2,3,4,5
-		if contiguous || (a.LeftType() == Closed && b.RightType() == Closed) {
-			// a: 5,6,7 b: 1,2,3,4,5
-		} else {
-			c_1 = true
-		}
+	} else if a.Start().Equal(b.End()) {
+		c_1 = (aLeftType == Open || bRightType == Open)
 	}
 
 	c_2 := false // is a_e before b_s
 	if a.End().Before(b.Start()) {
 		c_2 = true
-	}
-	if a.End().Equal(b.Start()) {
-		// given 1,2,3,4,5 and 5,6,7,8
-		if contiguous || (a.RightType() == Closed && b.LeftType() == Closed) {
-			// a: 1, 2, 3, 4, 5
-			// b: 5, 6, 7, 8
-			// not before
-		} else {
-			c_2 = true
-		}
+	} else if a.End().Equal(b.Start()) {
+		c_2 = (aRightType == Open || bLeftType == Open)
 	}
 
 	if c_1 || c_2 {
@@ -160,7 +164,7 @@ func (ts List) UnionWithHandler(mergeHandlerFunc MergeHandlerFunc) List {
 		// A: current timespan in merged array; B: current timespan in sorted array
 		// If B overlaps with A, it can be merged with A.
 		a := result[len(result)-1]
-		if overlap(a, b, true) {
+		if overlap(a, b) || contiguous(a,b) {
 			result[len(result)-1] = mergeHandlerFunc(a, b, a.Start(), getMaxTime(a.End(), b.End()))
 			continue
 		}
@@ -204,7 +208,7 @@ func (ts List) IntersectionWithHandler(intersectHandlerFunc IntersectionHandlerF
 		})
 
 		for _, a := range actives {
-			if overlap(a, b, false) {
+			if overlap(a, b) {
 				start := getMaxTime(b.Start(), a.Start())
 				end := getMinTime(b.End(), a.End())
 				intersection := intersectHandlerFunc(a, b, start, end)

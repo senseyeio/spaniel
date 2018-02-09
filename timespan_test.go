@@ -7,16 +7,17 @@ import (
 	"reflect"
 
 	timespan "github.com/senseyeio/spaniel"
-	"fmt"
 )
 
 type Event struct {
 	start time.Time
 	end   time.Time
+	leftType timespan.IntervalType
+	rightType timespan.IntervalType
 }
 
 func NewEvent(start time.Time, end time.Time) *Event {
-	return &Event{start, end}
+	return &Event{start, end, timespan.Closed, timespan.Open}
 }
 
 func (e *Event) Start() time.Time {
@@ -27,11 +28,19 @@ func (e *Event) End() time.Time {
 }
 
 func (e *Event) LeftType() timespan.IntervalType {
-	return timespan.Closed
+	return e.leftType
 }
 
 func (e *Event) RightType() timespan.IntervalType {
-	return timespan.Open
+	return e.rightType
+}
+
+func (e *Event) SetLeftType(leftType timespan.IntervalType) {
+	e.leftType = leftType
+}
+
+func (e *Event) SetRightType(rightType timespan.IntervalType) {
+	e.rightType = rightType
 }
 
 func (e *Event) String() string {
@@ -44,7 +53,7 @@ type PropertyEvent struct {
 }
 
 func NewPropertyEvent(start time.Time, end time.Time, properties []string) *PropertyEvent {
-	return &PropertyEvent{Event{start, end}, properties}
+	return &PropertyEvent{Event{start, end, timespan.Closed, timespan.Open}, properties}
 }
 
 var now = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
@@ -194,7 +203,6 @@ func TestUnion(t *testing.T) {
 	})
 
 	t.Run("Should merge two consecutive timespans", func(t *testing.T) {
-		fmt.Println("2 cons")
 		a := timespan.NewEmpty(now, now.Add(time.Hour))
 		b := timespan.NewEmpty(now.Add(time.Hour), now.Add(3*time.Hour))
 		expected :=  timespan.List{timespan.NewEmpty(a.Start(), b.End())}
@@ -248,6 +256,20 @@ func TestUnion(t *testing.T) {
 		after := events.Union()
 		expectEqual(t, after, expected)
 	})
+
+
+	t.Run("Should not merge two consecutive timespans if non-inclusive", func(t *testing.T) {
+		a := NewEvent(now, now.Add(time.Hour))
+		a.SetRightType(timespan.Open)
+
+		b := NewEvent(now.Add(time.Hour), now.Add(3*time.Hour))
+		b.SetLeftType(timespan.Open)
+		expected :=  timespan.List{a,b}
+		events := timespan.List{a, b}
+		after := events.Union()
+		expectEqual(t, after, expected)
+	})
+
 }
 
 
