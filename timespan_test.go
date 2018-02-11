@@ -150,8 +150,8 @@ func TestHandlers(t *testing.T) {
 func TestUnion(t *testing.T) {
 
 	t.Run("Should keep two instants separate", func(t *testing.T) {
-		a := timespan.NewEmpty(now, now)
-		b := timespan.NewEmpty(now.Add(2*time.Hour), now.Add(2*time.Hour))
+		a := timespan.NewInstant(now)
+		b := timespan.NewInstant(now.Add(2 * time.Hour))
 		events := timespan.List{a, b}
 		after := events.Union()
 		expectEqual(t, after, events)
@@ -240,8 +240,8 @@ func TestUnion(t *testing.T) {
 func TestIntersection(t *testing.T) {
 
 	t.Run("Should find overlaps for two instants", func(t *testing.T) {
-		a := timespan.NewEmpty(now, now)
-		b := timespan.NewEmpty(now, now)
+		a := timespan.NewInstant(now)
+		b := timespan.NewInstant(now)
 		expected := timespan.List{timespan.NewEmpty(a.Start(), a.End())}
 		events := timespan.List{a, b}
 		after := events.Intersection()
