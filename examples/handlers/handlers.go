@@ -20,6 +20,13 @@ func (e *PropertyEvent) End() time.Time {
 	return e.end
 }
 
+func (e *PropertyEvent) StartType() spaniel.IntervalType {
+	return spaniel.Closed
+}
+func (e *PropertyEvent) EndType() spaniel.IntervalType {
+	return spaniel.Closed
+}
+
 func NewPropertyEvent(start time.Time, end time.Time, properties []string) *PropertyEvent {
 	return &PropertyEvent{start, end, properties}
 }

@@ -25,6 +25,14 @@ func (e *Event) End() time.Time {
 	return e.end
 }
 
+func (e *Event) StartType() timespan.IntervalType {
+	return timespan.Closed
+}
+
+func (e *Event) EndType() timespan.IntervalType {
+	return timespan.Closed
+}
+
 func (e *Event) String() string {
 	return e.start.Format("15:04:05") + "-" + e.end.Format("15:04:05")
 }

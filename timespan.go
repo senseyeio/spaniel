@@ -5,10 +5,19 @@ import (
 	"time"
 )
 
+type IntervalType int
+
+const (
+	Open IntervalType = iota
+	Closed
+)
+
 // T represents a basic timespan, with a start and end time.
 type T interface {
 	Start() time.Time
 	End() time.Time
+	StartType() IntervalType
+	EndType() IntervalType
 }
 
 // List represents a list of timespans, on which other functions operate.
