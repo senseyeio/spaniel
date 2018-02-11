@@ -62,14 +62,86 @@ func filter(timeSpans List, filterFunc func(T) bool) List {
 	return filtered
 }
 
-func overlap(a, b T, allowContiguous bool) bool {
+// Returns true if two timespans are side by side
+func contiguous(a, b T) bool {
+	// [1,2,3,4] [4,5,6,7] - not contiguous
+	// [1,2,3,4) [4,5,6,7] - contiguous
+	// [1,2,3,4] (4,5,6,7] - contiguous
+	// [1,2,3,4) (4,5,6,7] - not contiguous
+	// [1,2,3] [5,6,7] - not contiguous
+
 	if b.Start().Before(a.Start()) {
 		a, b = b, a
 	}
-	if allowContiguous && a.End() == b.Start() {
-		return true
+
+	aEndType := a.EndType()
+	bStartType := b.StartType()
+
+	if IsInstant(a) {
+		aEndType = Closed
 	}
-	return !a.End().Before(b.Start())
+	if IsInstant(b) {
+		bStartType = Closed
+	}
+
+	// To be contiguous the ranges have to overlap on the first/last time
+	if !(a.End().Equal(b.Start())) {
+		return false
+	}
+
+	if aEndType == bStartType {
+		return false
+	}
+	return true
+}
+
+func IsInstant(t T) bool {
+	return t.Start().Equal(t.End())
+}
+
+// Returns true if two timespans overlap
+func overlap(a, b T) bool {
+	// [1,2,3,4] [4,5,6,7] - intersects
+	// [1,2,3,4) [4,5,6,7] - doesn't intersect
+	// [1,2,3,4] (4,5,6,7] - doesn't intersect
+	// [1,2,3,4) (4,5,6,7] - doesn't intersect
+
+	aStartType := a.StartType()
+	aEndType := a.EndType()
+	bStartType := b.StartType()
+	bEndType := b.EndType()
+
+	if IsInstant(a) {
+		aStartType = Closed
+		aEndType = Closed
+	}
+	if IsInstant(b) {
+		bStartType = Closed
+		bEndType = Closed
+	}
+
+	// Given [a_s,a_e] and [b_s,b_e]
+	// If a_s > b_e || a_e < b_s, overlap == false
+
+	c_1 := false // is a_s after b_e
+	if a.Start().After(b.End()) {
+		c_1 = true
+	} else if a.Start().Equal(b.End()) {
+		c_1 = (aStartType == Open || bEndType == Open)
+	}
+
+	c_2 := false // is a_e before b_s
+	if a.End().Before(b.Start()) {
+		c_2 = true
+	} else if a.End().Equal(b.Start()) {
+		c_2 = (aEndType == Open || bStartType == Open)
+	}
+
+	if c_1 || c_2 {
+		return false
+	}
+
+	return true
 }
 
 // UnionWithHandler returns a list of TimeSpans representing the union of all of the time spans.
@@ -91,7 +163,7 @@ func (ts List) UnionWithHandler(mergeHandlerFunc MergeHandlerFunc) List {
 		// A: current timespan in merged array; B: current timespan in sorted array
 		// If B overlaps with A, it can be merged with A.
 		a := result[len(result)-1]
-		if overlap(a, b, true) {
+		if overlap(a, b) || contiguous(a, b) {
 			span := NewEmpty(a.Start(), getMaxTime(a.End(), b.End()))
 			result[len(result)-1] = mergeHandlerFunc(a, b, span)
 			continue
@@ -136,7 +208,7 @@ func (ts List) IntersectionWithHandler(intersectHandlerFunc IntersectionHandlerF
 		})
 
 		for _, a := range actives {
-			if overlap(a, b, false) {
+			if overlap(a, b) {
 				start := getMaxTime(b.Start(), a.Start())
 				end := getMinTime(b.End(), a.End())
 				span := NewEmpty(start, end)
