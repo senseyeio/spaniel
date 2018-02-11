@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"github.com/senseyeio/spaniel"
-	"time"
 	"fmt"
+	"github.com/senseyeio/spaniel"
 	"sort"
+	"time"
 )
 
 type PropertyEvent struct {
@@ -49,18 +49,18 @@ func main() {
 		NewPropertyEvent(now.Add(30*time.Minute), now.Add(90*time.Minute), []string{"2"}),
 	}
 
-	var mergeHandlerFunc spaniel.MergeHandlerFunc = func(mergeInto, mergeFrom spaniel.T, start, end time.Time) spaniel.T {
+	var mergeHandlerFunc spaniel.MergeHandlerFunc = func(mergeInto, mergeFrom, mergeSpan spaniel.T) spaniel.T {
 		a := mergeInto.(*PropertyEvent)
 		b := mergeFrom.(*PropertyEvent)
 		// Return your object that implements timespan.T
-		return NewPropertyEvent(start, end, mergeProperties(a.Properties, b.Properties))
+		return NewPropertyEvent(mergeSpan.Start(), mergeSpan.End(), mergeProperties(a.Properties, b.Properties))
 	}
 
-	var intersectionHandlerFunc spaniel.IntersectionHandlerFunc = func(intersectingEvent1, intersectingEvent2 spaniel.T, start, end time.Time) spaniel.T {
+	var intersectionHandlerFunc spaniel.IntersectionHandlerFunc = func(intersectingEvent1, intersectingEvent2, intersectionSpan spaniel.T) spaniel.T {
 		a := intersectingEvent1.(*PropertyEvent)
 		b := intersectingEvent2.(*PropertyEvent)
 		// Return your object that implements timespan.T
-		return NewPropertyEvent(start, end, mergeProperties(a.Properties, b.Properties))
+		return NewPropertyEvent(intersectionSpan.Start(), intersectionSpan.End(), mergeProperties(a.Properties, b.Properties))
 	}
 
 	union := input.UnionWithHandler(mergeHandlerFunc)
