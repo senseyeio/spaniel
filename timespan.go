@@ -70,8 +70,29 @@ func contiguous(a, b T) bool {
 	// [1,2,3,4) (4,5,6,7] - not contiguous
 	// [1,2,3] [5,6,7] - not contiguous
 
+	// Both instants, they can't be contiguous
+	if IsInstant(a) && IsInstant(b) {
+		return false
+	}
+
 	if b.Start().Before(a.Start()) {
 		a, b = b, a
+	}
+
+	// If one is an instant; if they match the start or end of the other, and the other type is open
+	// they are contiguous
+	if IsInstant(a) {
+		if a.End().Equal(b.Start()) {
+			return b.StartType() == Open
+		} else if a.End().Equal(b.End()) {
+			return b.EndType() == Open
+		}
+	} else if IsInstant(b) {
+		if b.End().Equal(a.Start()) {
+			return a.StartType() == Open
+		} else if b.End().Equal(a.End()) {
+			return a.EndType() == Open
+		}
 	}
 
 	aEndType := a.EndType()
