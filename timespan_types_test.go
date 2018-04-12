@@ -6,52 +6,154 @@ import (
 	"time"
 )
 
+
+var (
+	t1 = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
+	t2 = t1.Add(time.Second)
+	t3 = t2.Add(time.Second)
+	t4 = t3.Add(time.Second)
+)
+
+type IntervalTypePair struct {
+	startType timespan.IntervalType
+	endType   timespan.IntervalType
+}
+
 func TestTypedUnion(t *testing.T) {
 
-	t.Run("Two overlapping inclusive ranges should result in an inclusive range", func(t *testing.T) {
-		a := timespan.NewEmpty(now, now.Add(2*time.Hour), timespan.Closed, timespan.Closed)
-		b := timespan.NewEmpty(now.Add(2*time.Hour), now.Add(2*time.Hour), timespan.Closed, timespan.Closed)
-		expected := timespan.List{timespan.NewEmpty(a.Start(), b.End(), timespan.Closed, timespan.Closed)}
-		events := timespan.List{a, b}
-		after := events.Union()
-		expectEqual(t, after, expected)
-	})
+	for _, tt := range []struct {
+		name       string
+		a, b       timespan.T
+		mergeTypes IntervalTypePair
+	}{
+		{
+			//  (--a--]
+			//        (--b--]
+			name:       "contiguous o/c o/c",
+			a:          timespan.NewEmpty(t1, t2, timespan.Open, timespan.Closed),
+			b:          timespan.NewEmpty(t2, t3, timespan.Open, timespan.Closed),
+			mergeTypes: IntervalTypePair{timespan.Open, timespan.Closed},
+		},
+		{
+			//  [--a--]
+			//        (--b--)
+			name:       "contiguous c/c o/o",
+			a:          timespan.NewEmpty(t1, t2, timespan.Closed, timespan.Closed),
+			b:          timespan.NewEmpty(t2, t3, timespan.Open, timespan.Open),
+			mergeTypes: IntervalTypePair{timespan.Closed, timespan.Open},
+		},
+		{
+			//  [--a--)
+			//        [--b--)
+			name:       "contiguous c/o c/o",
+			a:          timespan.NewEmpty(t1, t2, timespan.Closed, timespan.Open),
+			b:          timespan.NewEmpty(t2, t3, timespan.Closed, timespan.Open),
+			mergeTypes: IntervalTypePair{timespan.Closed, timespan.Open},
+		},
+		{
+			//  [--a--)
+			//    (b]
+			name:       "overlap c/o o/c",
+			a:          timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Open),
+			b:          timespan.NewEmpty(t2, t3, timespan.Open, timespan.Closed),
+			mergeTypes: IntervalTypePair{timespan.Closed, timespan.Open},
+		},
+		{
+			//  [--a--)
+			//    [b)
+			name:       "overlap c/o c/o",
+			a:          timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Open),
+			b:         timespan.NewEmpty(t2, t3, timespan.Closed, timespan.Open),
+			mergeTypes: IntervalTypePair{timespan.Closed, timespan.Open},
+		},
+		{
+			//  (--a--]
+			//  [b]
+			name:       "overlap o/c start instant",
+			a:          timespan.NewEmpty(t1, t4, timespan.Open, timespan.Closed),
+			b:          timespan.NewInstant(t1),
+			mergeTypes: IntervalTypePair{timespan.Closed, timespan.Closed},
+		},
+		{
+			//  [--a--)
+			//       [b]
+			name:       "overlap c/o end instant",
+			a:          timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Open),
+			b:          timespan.NewInstant(t4),
+			mergeTypes: IntervalTypePair{timespan.Closed, timespan.Closed},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
 
-	t.Run("Two ranges half-closed at outer ends should keep that nature", func(t *testing.T) {
-		a := timespan.NewEmpty(now, now.Add(2*time.Hour), timespan.Open, timespan.Closed)
-		b := timespan.NewEmpty(now.Add(2*time.Hour), now.Add(3*time.Hour), timespan.Closed, timespan.Open)
-		expected := timespan.List{timespan.NewEmpty(a.Start(), b.End(), timespan.Open, timespan.Open)}
-		events := timespan.List{a, b}
-		after := events.Union()
-		expectEqual(t, after, expected)
-	})
+			input := timespan.List{
+				tt.a, tt.b,
+			}
+			merges := input.Union()
+			if len(merges) != 1 {
+				t.Errorf("no merges")
+				return
+			}
 
-	t.Run("Two ranges half-closed at inner ends should keep that nature", func(t *testing.T) {
-		a := timespan.NewEmpty(now, now.Add(2*time.Hour), timespan.Closed, timespan.Open)
-		b := timespan.NewEmpty(now.Add(2*time.Hour), now.Add(2*time.Hour), timespan.Open, timespan.Closed)
-		expected := timespan.List{timespan.NewEmpty(a.Start(), b.End(), timespan.Closed, timespan.Closed)}
-		events := timespan.List{a, b}
-		after := events.Union()
-		expectEqual(t, after, expected)
-	})
+			if merges[0].StartType() != tt.mergeTypes.startType {
+				t.Errorf("merge start")
+			}
 
-	t.Run("Two duplicate ranges should keep the more inclusive type", func(t *testing.T) {
-		a := timespan.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), timespan.Closed, timespan.Closed)
-		b := timespan.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), timespan.Open, timespan.Open)
-		expected := timespan.List{timespan.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), timespan.Closed, timespan.Closed)}
-		events := timespan.List{a, b}
-		after := events.Union()
-		expectEqual(t, after, expected)
-	})
+			if merges[0].EndType() != tt.mergeTypes.endType {
+				t.Errorf("merge end")
+			}
+		})
+	}
 }
 
 func TestTypedIntersection(t *testing.T) {
-	t.Run("Two intersecting ranges should keep the more exclusive type", func(t *testing.T) {
-		a := timespan.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), timespan.Open, timespan.Closed)
-		b := timespan.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), timespan.Closed, timespan.Open)
-		expected := timespan.List{timespan.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), timespan.Open, timespan.Open)}
-		events := timespan.List{a, b}
-		after := events.Intersection()
-		expectEqual(t, after, expected)
-	})
+
+	for _, tt := range []struct {
+		name              string
+		a, b              timespan.T
+		intersectionTypes IntervalTypePair
+	}{
+		{
+			//  [--a--)
+			//    (b]
+			name:              "overlap c/o o/c",
+			a:                 timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Open),
+			b:                 timespan.NewEmpty(t2, t3, timespan.Open, timespan.Closed),
+			intersectionTypes: IntervalTypePair{timespan.Open, timespan.Closed},
+		},
+		{
+			//  [--a--)
+			//    [b)
+			name:              "overlap c/o c/o",
+			a:                 timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Open),
+			b:                 timespan.NewEmpty(t2, t3, timespan.Closed, timespan.Open),
+			intersectionTypes: IntervalTypePair{timespan.Closed, timespan.Open},
+		},
+
+		{
+			//  [---a---]
+			//    (-b-)
+			name:              "overlap c/c o/o",
+			a:                 timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Closed),
+			b:                 timespan.NewEmpty(t2, t3, timespan.Open, timespan.Open),
+			intersectionTypes: IntervalTypePair{timespan.Open, timespan.Open},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			input := timespan.List{
+				tt.a, tt.b,
+			}
+			intersections := input.Intersection()
+			if len(intersections) != 1 {
+				return
+			}
+
+			if intersections[0].StartType() != tt.intersectionTypes.startType {
+				t.Errorf("intersection start")
+			}
+
+			if intersections[0].EndType() != tt.intersectionTypes.endType {
+				t.Errorf("intersection end")
+			}
+		})
+	}
 }

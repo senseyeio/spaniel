@@ -16,12 +16,17 @@ func (its *Instant) Start() time.Time { return its.time }
 func (its *Instant) End() time.Time { return its.time }
 
 // StartType returns the start type of a span. In this case, Closed as it is an instantaneous event.
-func (ets *Instant) StartType() IntervalType { return Closed }
+func (its *Instant) StartType() IntervalType { return Closed }
 
 // EndType returns the end type of a span. In this case, Closed as it is an instantaneous event.
-func (ets *Instant) EndType() IntervalType { return Closed }
+func (its *Instant) EndType() IntervalType { return Closed }
+
+func (its *Instant) String() string {
+	return "[" + its.Start().String() + "]"
+}
 
 // NewInstant creates a span with just a single time.
 func NewInstant(time time.Time) *Instant {
 	return &Instant{time}
 }
+

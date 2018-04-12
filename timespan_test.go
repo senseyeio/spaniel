@@ -83,7 +83,7 @@ func TestHandlers(t *testing.T) {
 		return a
 	}
 
-	var mergePropertiesFunc = func(mergeInto timespan.T, mergeFrom timespan.T, start time.Time, end time.Time, startType, endType timespan.IntervalType) timespan.T {
+	var mergePropertiesFunc = func(mergeInto timespan.T, mergeFrom timespan.T, mergeSpan timespan.T) timespan.T {
 		// The union will contain the properties from both merged events
 		a, ok := mergeInto.(*PropertyEvent)
 		if !ok {
@@ -94,10 +94,10 @@ func TestHandlers(t *testing.T) {
 		if !ok {
 			t.Fatalf("Couldn't cast mergeFrom timespan into a PropertyEvent")
 		}
-		return NewPropertyEvent(start, end, mergeProperties(a.Properties, b.Properties))
+		return NewPropertyEvent(mergeSpan.Start(), mergeSpan.End(), mergeProperties(a.Properties, b.Properties))
 	}
 
-	var intersectPropertiesFunc = func(intersectingEvent1 timespan.T, intersectingEvent2 timespan.T, start time.Time, end time.Time, startType, endType timespan.IntervalType) timespan.T {
+	var intersectPropertiesFunc = func(intersectingEvent1 timespan.T, intersectingEvent2 timespan.T, intersectSpan timespan.T) timespan.T {
 		// The intersection will contain the properties from both intersecting events
 		a, ok := intersectingEvent1.(*PropertyEvent)
 		if !ok {
@@ -107,7 +107,7 @@ func TestHandlers(t *testing.T) {
 		if !ok {
 			t.Fatalf("Couldn't cast intersectingEvent2 timespan into a PropertyEvent")
 		}
-		return NewPropertyEvent(start, end, mergeProperties(a.Properties, b.Properties))
+		return NewPropertyEvent(intersectSpan.Start(), intersectSpan.End(), mergeProperties(a.Properties, b.Properties))
 
 	}
 
