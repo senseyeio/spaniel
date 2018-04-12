@@ -1,19 +1,19 @@
 package spaniel_test
 
 import (
-	"sort"
-	"time"
-	"testing"
 	"reflect"
+	"sort"
+	"testing"
+	"time"
 
 	timespan "github.com/senseyeio/spaniel"
 )
 
 type Event struct {
-	start time.Time
-	end   time.Time
+	start     time.Time
+	end       time.Time
 	startType timespan.IntervalType
-	endType timespan.IntervalType
+	endType   timespan.IntervalType
 }
 
 func NewEvent(start time.Time, end time.Time) *Event {
@@ -58,11 +58,9 @@ func NewPropertyEvent(start time.Time, end time.Time, properties []string) *Prop
 
 var now = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
 
-
-
 func expectEqual(t *testing.T, x interface{}, y interface{}) {
 
-	if !reflect.DeepEqual(x,y) {
+	if !reflect.DeepEqual(x, y) {
 		t.Fatalf("Expected %v to equal %v", x, y)
 	}
 }
@@ -87,15 +85,28 @@ func TestHandlers(t *testing.T) {
 
 	var mergePropertiesFunc = func(mergeInto timespan.T, mergeFrom timespan.T, start time.Time, end time.Time, startType, endType timespan.IntervalType) timespan.T {
 		// The union will contain the properties from both merged events
-		a := mergeInto.(*PropertyEvent)
-		b := mergeFrom.(*PropertyEvent)
+		a, ok := mergeInto.(*PropertyEvent)
+		if !ok {
+			t.Fatalf("Couldn't cast mergeInto timespan into a PropertyEvent")
+		}
+
+		b, ok := mergeFrom.(*PropertyEvent)
+		if !ok {
+			t.Fatalf("Couldn't cast mergeFrom timespan into a PropertyEvent")
+		}
 		return NewPropertyEvent(start, end, mergeProperties(a.Properties, b.Properties))
 	}
 
-	var intersectPropertiesFunc = func(intersectingEvent1 timespan.T, intersectingEvent2 timespan.T, start time.Time, end time.Time,  startType, endType timespan.IntervalType) timespan.T {
+	var intersectPropertiesFunc = func(intersectingEvent1 timespan.T, intersectingEvent2 timespan.T, start time.Time, end time.Time, startType, endType timespan.IntervalType) timespan.T {
 		// The intersection will contain the properties from both intersecting events
-		a := intersectingEvent1.(*PropertyEvent)
-		b := intersectingEvent2.(*PropertyEvent)
+		a, ok := intersectingEvent1.(*PropertyEvent)
+		if !ok {
+			t.Fatalf("Couldn't cast intersectingEvent1 timespan into a PropertyEvent")
+		}
+		b, ok := intersectingEvent2.(*PropertyEvent)
+		if !ok {
+			t.Fatalf("Couldn't cast intersectingEvent2 timespan into a PropertyEvent")
+		}
 		return NewPropertyEvent(start, end, mergeProperties(a.Properties, b.Properties))
 
 	}
@@ -149,7 +160,6 @@ func TestHandlers(t *testing.T) {
 		// Intersect the property spans with the input timespans
 		intersectionPropSpans2 := append(propSpans2, mergedInputTimeSpans...).IntersectionWithHandler(intersectPropertiesFunc)
 
-
 		expectEqual(t, intersectionPropSpans2, timespan.List{
 			NewPropertyEvent(now.Add(35*time.Minute), now.Add(60*time.Minute), []string{"prop2"}),   // 00:35 - 01:00
 			NewPropertyEvent(now.Add(90*time.Minute), now.Add(110*time.Minute), []string{"prop2"}),  // 01:30 - 01:50
@@ -170,8 +180,8 @@ func TestHandlers(t *testing.T) {
 
 func TestUnion(t *testing.T) {
 
-	t.Run("Should keep two instants separate", func(t *testing.T){
-		a := timespan.NewEmptyTyped(now, now, )
+	t.Run("Should keep two instants separate", func(t *testing.T) {
+		a := timespan.NewEmptyTyped(now, now)
 		b := timespan.NewEmptyTyped(now.Add(2*time.Hour), now.Add(2*time.Hour))
 		events := timespan.List{a, b}
 		after := events.Union()
@@ -186,14 +196,14 @@ func TestUnion(t *testing.T) {
 		expectEqual(t, after, events)
 	})
 
-	t.Run("Should handle a single timespan by returning that timespan", func(t *testing.T){
+	t.Run("Should handle a single timespan by returning that timespan", func(t *testing.T) {
 		a := timespan.NewEmptyTyped(now, now.Add(time.Hour))
 		events := timespan.List{a}
 		after := events.Union()
 		expectEqual(t, after, events)
 	})
 
-	t.Run("Should merge two overlapping timespans", func(t *testing.T){
+	t.Run("Should merge two overlapping timespans", func(t *testing.T) {
 		a := timespan.NewEmptyTyped(now, now.Add(time.Hour))
 		b := timespan.NewEmptyTyped(now.Add(30*time.Minute), now.Add(3*time.Hour))
 		expected := timespan.List{timespan.NewEmptyTyped(a.Start(), b.End())}
@@ -205,17 +215,17 @@ func TestUnion(t *testing.T) {
 	t.Run("Should merge two consecutive timespans", func(t *testing.T) {
 		a := timespan.NewEmptyTyped(now, now.Add(time.Hour))
 		b := timespan.NewEmptyTyped(now.Add(time.Hour), now.Add(3*time.Hour))
-		expected :=  timespan.List{timespan.NewEmptyTyped(a.Start(), b.End())}
+		expected := timespan.List{timespan.NewEmptyTyped(a.Start(), b.End())}
 		events := timespan.List{a, b}
 		after := events.Union()
 		expectEqual(t, after, expected)
 	})
 
-	t.Run("Should merge three overlapping timespans", func(t *testing.T){
+	t.Run("Should merge three overlapping timespans", func(t *testing.T) {
 		a := timespan.NewEmptyTyped(now, now.Add(time.Hour))
 		b := timespan.NewEmptyTyped(now.Add(30*time.Minute), now.Add(3*time.Hour))
 		c := timespan.NewEmptyTyped(now.Add(20*time.Minute), now.Add(35*time.Minute))
-		expected :=  timespan.List{timespan.NewEmptyTyped(a.Start(), b.End())}
+		expected := timespan.List{timespan.NewEmptyTyped(a.Start(), b.End())}
 		events := timespan.List{a, b, c}
 		after := events.Union()
 		expectEqual(t, after, expected)
@@ -233,7 +243,7 @@ func TestUnion(t *testing.T) {
 		expectEqual(t, after, expected)
 	})
 
-	t.Run("Should merge one timespan overlapped by two timespans", func(t *testing.T){
+	t.Run("Should merge one timespan overlapped by two timespans", func(t *testing.T) {
 		a := timespan.NewEmptyTyped(now, now.Add(60*time.Minute))
 		b := timespan.NewEmptyTyped(now.Add(15*time.Minute), now.Add(20*time.Minute))
 		c := timespan.NewEmptyTyped(now.Add(40*time.Minute), now.Add(45*time.Minute))
@@ -257,14 +267,13 @@ func TestUnion(t *testing.T) {
 		expectEqual(t, after, expected)
 	})
 
-
 	t.Run("Should not merge two consecutive timespans if non-inclusive", func(t *testing.T) {
 		a := NewEvent(now, now.Add(time.Hour))
 		a.SetEndType(timespan.Open)
 
 		b := NewEvent(now.Add(time.Hour), now.Add(3*time.Hour))
 		b.SetStartType(timespan.Open)
-		expected :=  timespan.List{a,b}
+		expected := timespan.List{a, b}
 		events := timespan.List{a, b}
 		after := events.Union()
 		expectEqual(t, after, expected)
@@ -272,13 +281,12 @@ func TestUnion(t *testing.T) {
 
 }
 
-
 func TestIntersection(t *testing.T) {
 
 	t.Run("Should find overlaps for two instants", func(t *testing.T) {
 		a := timespan.NewEmptyTyped(now, now)
 		b := timespan.NewEmptyTyped(now, now)
-		expected :=  timespan.List{timespan.NewEmptyTyped(a.Start(), a.End())}
+		expected := timespan.List{timespan.NewEmptyTyped(a.Start(), a.End())}
 		events := timespan.List{a, b}
 		after := events.Intersection()
 		expectEqual(t, after, expected)
@@ -292,7 +300,7 @@ func TestIntersection(t *testing.T) {
 		expectEqual(t, after, timespan.List{})
 	})
 
-	t.Run("Should find no intersections if a single timespan",func(t *testing.T) {
+	t.Run("Should find no intersections if a single timespan", func(t *testing.T) {
 		a := timespan.NewEmptyTyped(now, now.Add(time.Hour))
 		events := timespan.List{a}
 		after := events.Intersection()
@@ -302,7 +310,7 @@ func TestIntersection(t *testing.T) {
 	t.Run("Should return the intersection of two overlapping timespans", func(t *testing.T) {
 		a := timespan.NewEmptyTyped(now, now.Add(time.Hour))
 		b := timespan.NewEmptyTyped(now.Add(30*time.Minute), now.Add(3*time.Hour))
-		expected :=  timespan.List{timespan.NewEmptyTyped(b.Start(), a.End())}
+		expected := timespan.List{timespan.NewEmptyTyped(b.Start(), a.End())}
 		events := timespan.List{a, b}
 		after := events.Intersection()
 		expectEqual(t, after, expected)
@@ -338,7 +346,7 @@ func TestIntersection(t *testing.T) {
 		expectEqual(t, after, expected)
 	})
 
-	t.Run("Should return the intersections of two timespans overlapped by one timespan", func(t *testing.T){
+	t.Run("Should return the intersections of two timespans overlapped by one timespan", func(t *testing.T) {
 		a := NewEvent(now, now.Add(30*time.Minute))
 		b := NewEvent(now.Add(15*time.Minute), now.Add(60*time.Minute))
 		c := NewEvent(now.Add(45*time.Minute), now.Add(75*time.Minute))

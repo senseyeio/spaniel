@@ -5,10 +5,13 @@ import (
 	"time"
 )
 
+// IntervalType represents whether the start or end of an interval is Closed or Open.
 type IntervalType int
 
 const (
-	Open   IntervalType = iota
+	// Open means that the interval does not include a value
+	Open IntervalType = iota
+	// Closed means that the interval does include a value
 	Closed
 )
 
@@ -39,14 +42,14 @@ type MergeHandlerFunc func(mergeInto, mergeFrom T, start, end time.Time, startTy
 type IntersectionHandlerFunc func(intersectingEvent1, intersectingEvent2 T, start, end time.Time, startType, endType IntervalType) T
 
 func getLoosestIntervalType(x, y IntervalType) IntervalType {
-	if x < y {
+	if x > y {
 		return x
 	}
 	return y
 }
 
 func getTightestIntervalType(x, y IntervalType) IntervalType {
-	if x > y {
+	if x < y {
 		return x
 	}
 	return y
@@ -108,6 +111,7 @@ func filter(timeSpans List, filterFunc func(T) bool) List {
 	return filtered
 }
 
+// IsInstant returns true if the interval is deemed instantaneous
 func IsInstant(a T) bool {
 	return a.Start().Equal(a.End())
 }
@@ -169,21 +173,21 @@ func overlap(a, b T) bool {
 	// Given [a_s,a_e] and [b_s,b_e]
 	// If a_s > b_e || a_e < b_s, overlap == false
 
-	c_1 := false // is a_s after b_e
+	c1 := false // is a_s after b_e
 	if a.Start().After(b.End()) {
-		c_1 = true
+		c1 = true
 	} else if a.Start().Equal(b.End()) {
-		c_1 = (aStartType == Open || bEndType == Open)
+		c1 = (aStartType == Open || bEndType == Open)
 	}
 
-	c_2 := false // is a_e before b_s
+	c2 := false // is a_e before b_s
 	if a.End().Before(b.Start()) {
-		c_2 = true
+		c2 = true
 	} else if a.End().Equal(b.Start()) {
-		c_2 = (aEndType == Open || bStartType == Open)
+		c2 = (aEndType == Open || bStartType == Open)
 	}
 
-	if c_1 || c_2 {
+	if c1 || c2 {
 		return false
 	}
 
@@ -215,10 +219,10 @@ func (ts List) UnionWithHandler(mergeHandlerFunc MergeHandlerFunc) List {
 			minTime, startType := getMinStart(a, b)
 
 			if a.Start().Equal(b.Start()) {
-				startType = getTightestIntervalType(a.StartType(), b.StartType())
+				startType = getLoosestIntervalType(a.StartType(), b.StartType())
 			}
 			if a.End().Equal(b.End()) {
-				endType = getTightestIntervalType(a.EndType(), b.EndType())
+				endType = getLoosestIntervalType(a.EndType(), b.EndType())
 			}
 
 			result[len(result)-1] = mergeHandlerFunc(a, b, minTime, maxTime, startType, endType)
@@ -276,10 +280,10 @@ func (ts List) IntersectionWithHandler(intersectHandlerFunc IntersectionHandlerF
 				start, startType := getMaxStart(b, a)
 				end, endType := getMinEnd(b, a)
 				if a.Start().Equal(b.Start()) {
-					startType = getLoosestIntervalType(a.StartType(), b.StartType())
+					startType = getTightestIntervalType(a.StartType(), b.StartType())
 				}
 				if a.End().Equal(b.End()) {
-					endType = getLoosestIntervalType(a.EndType(), b.EndType())
+					endType = getTightestIntervalType(a.EndType(), b.EndType())
 				}
 				intersection := intersectHandlerFunc(a, b, start, end, startType, endType)
 				intersections = append(intersections, intersection)

@@ -1,12 +1,12 @@
-package basic
+package main
 
 import (
+	"fmt"
 	"github.com/senseyeio/spaniel"
 	"time"
-	"fmt"
 )
 
-func Main() {
+func main() {
 
 	var now = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
 

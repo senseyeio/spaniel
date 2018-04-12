@@ -1,11 +1,10 @@
 package spaniel_test
 
 import (
+	timespan "github.com/senseyeio/spaniel"
 	"testing"
 	"time"
-	timespan "github.com/senseyeio/spaniel"
 )
-
 
 func TestTypedUnion(t *testing.T) {
 
@@ -18,7 +17,6 @@ func TestTypedUnion(t *testing.T) {
 		expectEqual(t, after, expected)
 	})
 
-
 	t.Run("Two ranges half-closed at outer ends should keep that nature", func(t *testing.T) {
 		a := timespan.NewEmpty(now, now.Add(2*time.Hour), timespan.Open, timespan.Closed)
 		b := timespan.NewEmpty(now.Add(2*time.Hour), now.Add(3*time.Hour), timespan.Closed, timespan.Open)
@@ -27,7 +25,6 @@ func TestTypedUnion(t *testing.T) {
 		after := events.Union()
 		expectEqual(t, after, expected)
 	})
-
 
 	t.Run("Two ranges half-closed at inner ends should keep that nature", func(t *testing.T) {
 		a := timespan.NewEmpty(now, now.Add(2*time.Hour), timespan.Closed, timespan.Open)
@@ -38,13 +35,23 @@ func TestTypedUnion(t *testing.T) {
 		expectEqual(t, after, expected)
 	})
 
-
 	t.Run("Two duplicate ranges should keep the more inclusive type", func(t *testing.T) {
 		a := timespan.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), timespan.Closed, timespan.Closed)
 		b := timespan.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), timespan.Open, timespan.Open)
 		expected := timespan.List{timespan.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), timespan.Closed, timespan.Closed)}
 		events := timespan.List{a, b}
 		after := events.Union()
+		expectEqual(t, after, expected)
+	})
+}
+
+func TestTypedIntersection(t *testing.T) {
+	t.Run("Two intersecting ranges should keep the more exclusive type", func(t *testing.T) {
+		a := timespan.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), timespan.Open, timespan.Closed)
+		b := timespan.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), timespan.Closed, timespan.Open)
+		expected := timespan.List{timespan.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), timespan.Open, timespan.Open)}
+		events := timespan.List{a, b}
+		after := events.Intersection()
 		expectEqual(t, after, expected)
 	})
 }
