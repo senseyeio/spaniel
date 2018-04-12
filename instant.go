@@ -29,4 +29,3 @@ func (its *Instant) String() string {
 func NewInstant(time time.Time) *Instant {
 	return &Instant{time}
 }
-

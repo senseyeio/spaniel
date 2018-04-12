@@ -146,7 +146,6 @@ func contiguous(a, b T) bool {
 		bStartType = Closed
 	}
 
-
 	// If a and b start at the same time, just check that their start types are different.
 	if a.Start().Equal(b.Start()) {
 		return aStartType != bStartType
@@ -288,7 +287,7 @@ func (ts List) IntersectionWithHandler(intersectHandlerFunc IntersectionHandlerF
 				return false
 			}
 			// If this value starts after the one in actives finishes, filter the active.
-			return b.Start().After(t.End()) || b.Start().Equal(t.End())
+			return b.Start().After(t.End())
 		})
 
 		for _, a := range actives {

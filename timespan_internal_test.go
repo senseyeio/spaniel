@@ -12,7 +12,6 @@ var (
 	t4 = t3.Add(time.Second)
 )
 
-
 func TestOpenedClosedSpans(t *testing.T) {
 	for _, tt := range []struct {
 		name               string

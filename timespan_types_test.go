@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-
 var (
 	t1 = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
 	t2 = t1.Add(time.Second)
@@ -63,7 +62,7 @@ func TestTypedUnion(t *testing.T) {
 			//    [b)
 			name:       "overlap c/o c/o",
 			a:          timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Open),
-			b:         timespan.NewEmpty(t2, t3, timespan.Closed, timespan.Open),
+			b:          timespan.NewEmpty(t2, t3, timespan.Closed, timespan.Open),
 			mergeTypes: IntervalTypePair{timespan.Closed, timespan.Open},
 		},
 		{
@@ -90,16 +89,33 @@ func TestTypedUnion(t *testing.T) {
 			}
 			merges := input.Union()
 			if len(merges) != 1 {
-				t.Errorf("no merges")
+				t.Errorf("in order, no merges")
 				return
 			}
 
 			if merges[0].StartType() != tt.mergeTypes.startType {
-				t.Errorf("merge start")
+				t.Errorf("in order, merge start")
 			}
 
 			if merges[0].EndType() != tt.mergeTypes.endType {
-				t.Errorf("merge end")
+				t.Errorf("in order, merge end")
+			}
+
+			input = timespan.List{
+				tt.b, tt.a,
+			}
+			merges = input.Union()
+			if len(merges) != 1 {
+				t.Errorf("reversed, no merges")
+				return
+			}
+
+			if merges[0].StartType() != tt.mergeTypes.startType {
+				t.Errorf("reversed, merge start")
+			}
+
+			if merges[0].EndType() != tt.mergeTypes.endType {
+				t.Errorf("reversed, merge end")
 			}
 		})
 	}
@@ -128,7 +144,14 @@ func TestTypedIntersection(t *testing.T) {
 			b:                 timespan.NewEmpty(t2, t3, timespan.Closed, timespan.Open),
 			intersectionTypes: IntervalTypePair{timespan.Closed, timespan.Open},
 		},
-
+		{
+			//  [--a--]
+			//  (--b--)
+			name:              "overlap c/c o/o",
+			a:                 timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Closed),
+			b:                 timespan.NewEmpty(t1, t4, timespan.Open, timespan.Open),
+			intersectionTypes: IntervalTypePair{timespan.Open, timespan.Open},
+		},
 		{
 			//  [---a---]
 			//    (-b-)
@@ -148,11 +171,27 @@ func TestTypedIntersection(t *testing.T) {
 			}
 
 			if intersections[0].StartType() != tt.intersectionTypes.startType {
-				t.Errorf("intersection start")
+				t.Errorf("in order, intersection start")
 			}
 
 			if intersections[0].EndType() != tt.intersectionTypes.endType {
-				t.Errorf("intersection end")
+				t.Errorf("in order, intersection end")
+			}
+
+			input = timespan.List{
+				tt.b, tt.a,
+			}
+			intersections = input.Intersection()
+			if len(intersections) != 1 {
+				return
+			}
+
+			if intersections[0].StartType() != tt.intersectionTypes.startType {
+				t.Errorf("reversed, intersection start")
+			}
+
+			if intersections[0].EndType() != tt.intersectionTypes.endType {
+				t.Errorf("reversed, intersection end")
 			}
 		})
 	}
