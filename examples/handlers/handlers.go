@@ -24,6 +24,7 @@ func (e *PropertyEvent) End() time.Time {
 	return e.end
 }
 
+<<<<<<< HEAD
 // StartType represents the type of the start of the interval (Closed in this case).
 func (e *PropertyEvent) StartType() spaniel.IntervalType {
 	return spaniel.Closed
@@ -35,6 +36,15 @@ func (e *PropertyEvent) EndType() spaniel.IntervalType {
 }
 
 // NewPropertyEvent creates a new PropertyEvent with start and end times and a list of properties.
+=======
+func (e *PropertyEvent) StartType() spaniel.IntervalType {
+	return spaniel.Closed
+}
+func (e *PropertyEvent) EndType() spaniel.IntervalType {
+	return spaniel.Closed
+}
+
+>>>>>>> master
 func NewPropertyEvent(start time.Time, end time.Time, properties []string) *PropertyEvent {
 	return &PropertyEvent{start, end, properties}
 }
@@ -64,6 +74,7 @@ func main() {
 		NewPropertyEvent(now.Add(30*time.Minute), now.Add(90*time.Minute), []string{"2"}),
 	}
 
+<<<<<<< HEAD
 	var mergeHandlerFunc spaniel.MergeHandlerFunc = func(mergeInto, mergeFrom spaniel.T, start, end time.Time, startType, endType spaniel.IntervalType) spaniel.T {
 		a, ok := mergeInto.(*PropertyEvent)
 		if !ok {
@@ -73,10 +84,16 @@ func main() {
 		if !ok {
 			panic(fmt.Errorf("Expected mergeFrom to be a PropertyEvent"))
 		}
+=======
+	var mergeHandlerFunc spaniel.MergeHandlerFunc = func(mergeInto, mergeFrom, mergeSpan spaniel.T) spaniel.T {
+		a := mergeInto.(*PropertyEvent)
+		b := mergeFrom.(*PropertyEvent)
+>>>>>>> master
 		// Return your object that implements timespan.T
-		return NewPropertyEvent(start, end, mergeProperties(a.Properties, b.Properties))
+		return NewPropertyEvent(mergeSpan.Start(), mergeSpan.End(), mergeProperties(a.Properties, b.Properties))
 	}
 
+<<<<<<< HEAD
 	var intersectionHandlerFunc spaniel.IntersectionHandlerFunc = func(intersectingEvent1, intersectingEvent2 spaniel.T, start, end time.Time, startType, endType spaniel.IntervalType) spaniel.T {
 		a, ok := intersectingEvent1.(*PropertyEvent)
 		if !ok {
@@ -86,8 +103,13 @@ func main() {
 		if !ok {
 			panic(fmt.Errorf("Expected intersectingEvent2 to be a PropertyEvent"))
 		}
+=======
+	var intersectionHandlerFunc spaniel.IntersectionHandlerFunc = func(intersectingEvent1, intersectingEvent2, intersectionSpan spaniel.T) spaniel.T {
+		a := intersectingEvent1.(*PropertyEvent)
+		b := intersectingEvent2.(*PropertyEvent)
+>>>>>>> master
 		// Return your object that implements timespan.T
-		return NewPropertyEvent(start, end, mergeProperties(a.Properties, b.Properties))
+		return NewPropertyEvent(intersectionSpan.Start(), intersectionSpan.End(), mergeProperties(a.Properties, b.Properties))
 	}
 
 	union := input.UnionWithHandler(mergeHandlerFunc)
