@@ -23,47 +23,47 @@ func TestOpenedClosedSpans(t *testing.T) {
 			//  (--a--]
 			//          (--b--]
 			name:               "no overlap",
-			a:                  NewEmpty(t1, t2, Open, Closed),
-			b:                  NewEmpty(t3, t4, Open, Closed),
+			a:                  NewEmptyWithTypes(t1, t2, Open, Closed),
+			b:                  NewEmptyWithTypes(t3, t4, Open, Closed),
 			expectedOverlap:    false,
 			expectedContiguous: false,
 		}, {
 			//  (--a--]
 			//        (--b--]
 			name:               "contiguous",
-			a:                  NewEmpty(t1, t2, Open, Closed),
-			b:                  NewEmpty(t2, t3, Open, Closed),
+			a:                  NewEmptyWithTypes(t1, t2, Open, Closed),
+			b:                  NewEmptyWithTypes(t2, t3, Open, Closed),
 			expectedOverlap:    false,
 			expectedContiguous: true,
 		}, {
 			//  (---a----]
 			//        (---b----]
 			name:               "small intersection",
-			a:                  NewEmpty(t1, t3, Open, Closed),
-			b:                  NewEmpty(t2, t4, Open, Closed),
+			a:                  NewEmptyWithTypes(t1, t3, Open, Closed),
+			b:                  NewEmptyWithTypes(t2, t4, Open, Closed),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//  (------a------]
 			//      (--b--]
 			name:               "one inside the other",
-			a:                  NewEmpty(t1, t4, Open, Closed),
-			b:                  NewEmpty(t2, t3, Open, Closed),
+			a:                  NewEmptyWithTypes(t1, t4, Open, Closed),
+			b:                  NewEmptyWithTypes(t2, t3, Open, Closed),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//  (--a--]
 			//  (--b--]
 			name:               "same",
-			a:                  NewEmpty(t1, t2, Open, Closed),
-			b:                  NewEmpty(t1, t2, Open, Closed),
+			a:                  NewEmptyWithTypes(t1, t2, Open, Closed),
+			b:                  NewEmptyWithTypes(t1, t2, Open, Closed),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//  (--a--]
 			//           [b]
 			name:               "span vs instant, no overlap",
-			a:                  NewEmpty(t1, t3, Open, Closed),
+			a:                  NewEmptyWithTypes(t1, t3, Open, Closed),
 			b:                  NewInstant(t4),
 			expectedOverlap:    false,
 			expectedContiguous: false,
@@ -71,7 +71,7 @@ func TestOpenedClosedSpans(t *testing.T) {
 			//    (--a--]
 			//    [b]
 			name:               "span vs instant, overlap on the start border",
-			a:                  NewEmpty(t1, t3, Open, Closed),
+			a:                  NewEmptyWithTypes(t1, t3, Open, Closed),
 			b:                  NewInstant(t1),
 			expectedOverlap:    false,
 			expectedContiguous: true,
@@ -79,7 +79,7 @@ func TestOpenedClosedSpans(t *testing.T) {
 			//    (--a--]
 			//      [b]
 			name:               "span vs instant, overlap in the middle",
-			a:                  NewEmpty(t1, t3, Open, Closed),
+			a:                  NewEmptyWithTypes(t1, t3, Open, Closed),
 			b:                  NewInstant(t2),
 			expectedOverlap:    true,
 			expectedContiguous: false,
@@ -87,7 +87,7 @@ func TestOpenedClosedSpans(t *testing.T) {
 			//    (--a--]
 			//        [b]
 			name:               "span vs instant, overlap at the end",
-			a:                  NewEmpty(t1, t3, Open, Closed),
+			a:                  NewEmptyWithTypes(t1, t3, Open, Closed),
 			b:                  NewInstant(t3),
 			expectedOverlap:    true,
 			expectedContiguous: false,
@@ -126,47 +126,47 @@ func TestClosedOpenedSpans(t *testing.T) {
 			//  [--a--)
 			//          [--b--)
 			name:               "no overlap",
-			a:                  NewEmpty(t1, t2, Closed, Open),
-			b:                  NewEmpty(t3, t4, Closed, Open),
+			a:                  NewEmptyWithTypes(t1, t2, Closed, Open),
+			b:                  NewEmptyWithTypes(t3, t4, Closed, Open),
 			expectedOverlap:    false,
 			expectedContiguous: false,
 		}, {
 			//  [--a--)
 			//        [--b--)
 			name:               "contiguous",
-			a:                  NewEmpty(t1, t2, Closed, Open),
-			b:                  NewEmpty(t2, t3, Closed, Open),
+			a:                  NewEmptyWithTypes(t1, t2, Closed, Open),
+			b:                  NewEmptyWithTypes(t2, t3, Closed, Open),
 			expectedOverlap:    false,
 			expectedContiguous: true,
 		}, {
 			//  [---a----)
 			//        [---b----)
 			name:               "small intersection",
-			a:                  NewEmpty(t1, t3, Closed, Open),
-			b:                  NewEmpty(t2, t4, Closed, Open),
+			a:                  NewEmptyWithTypes(t1, t3, Closed, Open),
+			b:                  NewEmptyWithTypes(t2, t4, Closed, Open),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//  [------a------)
 			//      [--b--)
 			name:               "one inside the other",
-			a:                  NewEmpty(t1, t4, Closed, Open),
-			b:                  NewEmpty(t2, t3, Closed, Open),
+			a:                  NewEmptyWithTypes(t1, t4, Closed, Open),
+			b:                  NewEmptyWithTypes(t2, t3, Closed, Open),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//  [--a--)
 			//  [--b--)
 			name:               "same",
-			a:                  NewEmpty(t1, t2, Closed, Open),
-			b:                  NewEmpty(t1, t2, Closed, Open),
+			a:                  NewEmptyWithTypes(t1, t2, Closed, Open),
+			b:                  NewEmptyWithTypes(t1, t2, Closed, Open),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//  [--a--)
 			//           [b]
 			name:               "span vs instant, no overlap",
-			a:                  NewEmpty(t1, t3, Closed, Open),
+			a:                  NewEmptyWithTypes(t1, t3, Closed, Open),
 			b:                  NewInstant(t4),
 			expectedOverlap:    false,
 			expectedContiguous: false,
@@ -174,7 +174,7 @@ func TestClosedOpenedSpans(t *testing.T) {
 			//    [--a--)
 			//    [b]
 			name:               "span vs instant, overlap on the start border",
-			a:                  NewEmpty(t1, t3, Closed, Open),
+			a:                  NewEmptyWithTypes(t1, t3, Closed, Open),
 			b:                  NewInstant(t1),
 			expectedOverlap:    true,
 			expectedContiguous: false,
@@ -182,7 +182,7 @@ func TestClosedOpenedSpans(t *testing.T) {
 			//    [--a--)
 			//      [b]
 			name:               "span vs instant, overlap in the middle",
-			a:                  NewEmpty(t1, t3, Closed, Open),
+			a:                  NewEmptyWithTypes(t1, t3, Closed, Open),
 			b:                  NewInstant(t2),
 			expectedOverlap:    true,
 			expectedContiguous: false,
@@ -190,7 +190,7 @@ func TestClosedOpenedSpans(t *testing.T) {
 			//    [--a--)
 			//        [b]
 			name:               "span vs instant, overlap at the end",
-			a:                  NewEmpty(t1, t3, Closed, Open),
+			a:                  NewEmptyWithTypes(t1, t3, Closed, Open),
 			b:                  NewInstant(t3),
 			expectedOverlap:    false,
 			expectedContiguous: true,
@@ -230,55 +230,55 @@ func TestOpenedSpans(t *testing.T) {
 			//  (--a--)
 			//          (--b--)
 			name:               "no overlap",
-			a:                  NewEmpty(t1, t2, Open, Open),
-			b:                  NewEmpty(t3, t4, Open, Open),
+			a:                  NewEmptyWithTypes(t1, t2, Open, Open),
+			b:                  NewEmptyWithTypes(t3, t4, Open, Open),
 			expectedOverlap:    false,
 			expectedContiguous: false,
 		}, {
 			//  (--a--)
 			//        (--b--)
 			name:               "contiguous",
-			a:                  NewEmpty(t1, t2, Open, Open),
-			b:                  NewEmpty(t2, t3, Open, Open),
+			a:                  NewEmptyWithTypes(t1, t2, Open, Open),
+			b:                  NewEmptyWithTypes(t2, t3, Open, Open),
 			expectedOverlap:    false,
 			expectedContiguous: false,
 		}, {
 			//  (---a----)
 			//        (---b----)
 			name:               "small intersection",
-			a:                  NewEmpty(t1, t3, Open, Open),
-			b:                  NewEmpty(t2, t4, Open, Open),
+			a:                  NewEmptyWithTypes(t1, t3, Open, Open),
+			b:                  NewEmptyWithTypes(t2, t4, Open, Open),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//  (------a------)
 			//      (--b--)
 			name:               "one inside the other",
-			a:                  NewEmpty(t1, t4, Open, Open),
-			b:                  NewEmpty(t2, t3, Open, Open),
+			a:                  NewEmptyWithTypes(t1, t4, Open, Open),
+			b:                  NewEmptyWithTypes(t2, t3, Open, Open),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//  (--a--)
 			//  (--b--)
 			name:               "same",
-			a:                  NewEmpty(t1, t2, Open, Open),
-			b:                  NewEmpty(t1, t2, Open, Open),
+			a:                  NewEmptyWithTypes(t1, t2, Open, Open),
+			b:                  NewEmptyWithTypes(t1, t2, Open, Open),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//  (--a--)
 			//           [b]
 			name:               "span vs instant, no overlap",
-			a:                  NewEmpty(t1, t3, Open, Open),
-			b:                  NewEmpty(t4, t4, Open, Open),
+			a:                  NewEmptyWithTypes(t1, t3, Open, Open),
+			b:                  NewEmptyWithTypes(t4, t4, Open, Open),
 			expectedOverlap:    false,
 			expectedContiguous: false,
 		}, {
 			//    (--a--)
 			//    [b]
 			name:               "span vs instant, overlap on the start border",
-			a:                  NewEmpty(t1, t3, Open, Open),
+			a:                  NewEmptyWithTypes(t1, t3, Open, Open),
 			b:                  NewInstant(t1),
 			expectedOverlap:    false,
 			expectedContiguous: true,
@@ -286,7 +286,7 @@ func TestOpenedSpans(t *testing.T) {
 			//    (--a--)
 			//      [b]
 			name:               "span vs instant, overlap in the middle",
-			a:                  NewEmpty(t1, t3, Open, Open),
+			a:                  NewEmptyWithTypes(t1, t3, Open, Open),
 			b:                  NewInstant(t2),
 			expectedOverlap:    true,
 			expectedContiguous: false,
@@ -294,7 +294,7 @@ func TestOpenedSpans(t *testing.T) {
 			//    (--a--)
 			//        [b]
 			name:               "span vs instant, overlap at the end",
-			a:                  NewEmpty(t1, t3, Open, Open),
+			a:                  NewEmptyWithTypes(t1, t3, Open, Open),
 			b:                  NewInstant(t3),
 			expectedOverlap:    false,
 			expectedContiguous: true,
@@ -333,88 +333,88 @@ func TestClosedSpans(t *testing.T) {
 			//  [--a--]
 			//          [--b--]
 			name:               "no overlap",
-			a:                  NewEmptyTyped(t1, t2),
-			b:                  NewEmptyTyped(t3, t4),
+			a:                  NewEmpty(t1, t2),
+			b:                  NewEmpty(t3, t4),
 			expectedOverlap:    false,
 			expectedContiguous: false,
 		}, {
 			//  [--a--]
 			//        [--b--]
 			name:               "contiguous",
-			a:                  NewEmptyTyped(t1, t2),
-			b:                  NewEmptyTyped(t2, t3),
+			a:                  NewEmpty(t1, t2),
+			b:                  NewEmpty(t2, t3),
 			expectedOverlap:    false,
 			expectedContiguous: true,
 		}, {
 			//  [---a----]
 			//        [---b----]
 			name:               "small intersection",
-			a:                  NewEmptyTyped(t1, t3),
-			b:                  NewEmptyTyped(t2, t4),
+			a:                  NewEmpty(t1, t3),
+			b:                  NewEmpty(t2, t4),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//  [------a------]
 			//      [--b--]
 			name:               "one inside the other",
-			a:                  NewEmptyTyped(t1, t4),
-			b:                  NewEmptyTyped(t2, t3),
+			a:                  NewEmpty(t1, t4),
+			b:                  NewEmpty(t2, t3),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//  [--a--]
 			//  [--b--]
 			name:               "same",
-			a:                  NewEmptyTyped(t1, t2),
-			b:                  NewEmptyTyped(t1, t2),
+			a:                  NewEmpty(t1, t2),
+			b:                  NewEmpty(t1, t2),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//  [--a--]
 			//           [b]
 			name:               "span vs instant, no overlap",
-			a:                  NewEmptyTyped(t1, t3),
-			b:                  NewEmptyTyped(t4, t4),
+			a:                  NewEmpty(t1, t3),
+			b:                  NewEmpty(t4, t4),
 			expectedOverlap:    false,
 			expectedContiguous: false,
 		}, {
 			//    [--a--]
 			//    [b]
 			name:               "span vs instant, overlap on the start border",
-			a:                  NewEmptyTyped(t1, t3),
-			b:                  NewEmptyTyped(t1, t1),
+			a:                  NewEmpty(t1, t3),
+			b:                  NewEmpty(t1, t1),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//    [--a--]
 			//      [b]
 			name:               "span vs instant, overlap in the middle",
-			a:                  NewEmptyTyped(t1, t3),
-			b:                  NewEmptyTyped(t2, t2),
+			a:                  NewEmpty(t1, t3),
+			b:                  NewEmpty(t2, t2),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
 			//    [--a--]
 			//        [b]
 			name:               "span vs instant, overlap at the end",
-			a:                  NewEmptyTyped(t1, t3),
-			b:                  NewEmptyTyped(t3, t3),
+			a:                  NewEmpty(t1, t3),
+			b:                  NewEmpty(t3, t3),
 			expectedOverlap:    false,
 			expectedContiguous: true,
 		}, {
 			//    [a]
 			//         [b]
 			name:               "both instants, no overlap",
-			a:                  NewEmptyTyped(t1, t1),
-			b:                  NewEmptyTyped(t2, t2),
+			a:                  NewEmpty(t1, t1),
+			b:                  NewEmpty(t2, t2),
 			expectedOverlap:    false,
 			expectedContiguous: false,
 		}, {
 			//    [a]
 			//    [b]
 			name:               "both instants, overlap",
-			a:                  NewEmptyTyped(t1, t1),
-			b:                  NewEmptyTyped(t1, t1),
+			a:                  NewEmpty(t1, t1),
+			b:                  NewEmpty(t1, t1),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		},

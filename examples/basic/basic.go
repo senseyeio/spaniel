@@ -11,8 +11,8 @@ func main() {
 	var now = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
 
 	input := spaniel.List{
-		spaniel.NewEmptyTyped(now, now.Add(1*time.Hour)),
-		spaniel.NewEmptyTyped(now.Add(30*time.Minute), now.Add(90*time.Minute)),
+		spaniel.NewEmpty(now, now.Add(1*time.Hour)),
+		spaniel.NewEmpty(now.Add(30*time.Minute), now.Add(90*time.Minute)),
 	}
 
 	union := input.Union()

@@ -11,8 +11,8 @@ func main() {
 	var now = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
 
 	input := spaniel.List{
-		spaniel.NewEmpty(now, now.Add(1*time.Hour), spaniel.Open, spaniel.Open),
-		spaniel.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), spaniel.Open, spaniel.Open),
+		spaniel.NewEmptyWithTypes(now, now.Add(1*time.Hour), spaniel.Open, spaniel.Open),
+		spaniel.NewEmptyWithTypes(now.Add(1*time.Hour), now.Add(2*time.Hour), spaniel.Open, spaniel.Open),
 	}
 
 	union := input.Union()
@@ -24,8 +24,8 @@ func main() {
 	fmt.Println(intersection)
 
 	input = spaniel.List{
-		spaniel.NewEmpty(now, now.Add(1*time.Hour), spaniel.Closed, spaniel.Closed),
-		spaniel.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), spaniel.Closed, spaniel.Closed),
+		spaniel.NewEmptyWithTypes(now, now.Add(1*time.Hour), spaniel.Closed, spaniel.Closed),
+		spaniel.NewEmptyWithTypes(now.Add(1*time.Hour), now.Add(2*time.Hour), spaniel.Closed, spaniel.Closed),
 	}
 	union = input.Union()
 	fmt.Println("If they are Closed, they will overlap:")
@@ -36,8 +36,8 @@ func main() {
 	fmt.Println(intersection)
 
 	input = spaniel.List{
-		spaniel.NewEmpty(now, now.Add(1*time.Hour), spaniel.Closed, spaniel.Open),
-		spaniel.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), spaniel.Closed, spaniel.Open),
+		spaniel.NewEmptyWithTypes(now, now.Add(1*time.Hour), spaniel.Closed, spaniel.Open),
+		spaniel.NewEmptyWithTypes(now.Add(1*time.Hour), now.Add(2*time.Hour), spaniel.Closed, spaniel.Open),
 	}
 	union = input.Union()
 	fmt.Println("If they are both [) they can be merged as they are contiguous:")

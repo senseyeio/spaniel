@@ -238,7 +238,7 @@ func (ts List) UnionWithHandler(mergeHandlerFunc MergeHandlerFunc) List {
 				endType = getLoosestIntervalType(a.EndType(), b.EndType())
 			}
 
-			span := NewEmpty(minTime, maxTime, startType, endType)
+			span := NewEmptyWithTypes(minTime, maxTime, startType, endType)
 			result[len(result)-1] = mergeHandlerFunc(a, b, span)
 
 			continue
@@ -292,7 +292,7 @@ func (ts List) IntersectionWithHandler(intersectHandlerFunc IntersectionHandlerF
 				if a.End().Equal(b.End()) {
 					endType = getTightestIntervalType(a.EndType(), b.EndType())
 				}
-				span := NewEmpty(start, end, startType, endType)
+				span := NewEmptyWithTypes(start, end, startType, endType)
 				intersection := intersectHandlerFunc(a, b, span)
 				intersections = append(intersections, intersection)
 			}

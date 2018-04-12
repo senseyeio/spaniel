@@ -29,47 +29,47 @@ func TestTypedUnion(t *testing.T) {
 			//  (--a--]
 			//        (--b--]
 			name:       "contiguous o/c o/c",
-			a:          timespan.NewEmpty(t1, t2, timespan.Open, timespan.Closed),
-			b:          timespan.NewEmpty(t2, t3, timespan.Open, timespan.Closed),
+			a:          timespan.NewEmptyWithTypes(t1, t2, timespan.Open, timespan.Closed),
+			b:          timespan.NewEmptyWithTypes(t2, t3, timespan.Open, timespan.Closed),
 			mergeTypes: IntervalTypePair{timespan.Open, timespan.Closed},
 		},
 		{
 			//  [--a--]
 			//        (--b--)
 			name:       "contiguous c/c o/o",
-			a:          timespan.NewEmpty(t1, t2, timespan.Closed, timespan.Closed),
-			b:          timespan.NewEmpty(t2, t3, timespan.Open, timespan.Open),
+			a:          timespan.NewEmptyWithTypes(t1, t2, timespan.Closed, timespan.Closed),
+			b:          timespan.NewEmptyWithTypes(t2, t3, timespan.Open, timespan.Open),
 			mergeTypes: IntervalTypePair{timespan.Closed, timespan.Open},
 		},
 		{
 			//  [--a--)
 			//        [--b--)
 			name:       "contiguous c/o c/o",
-			a:          timespan.NewEmpty(t1, t2, timespan.Closed, timespan.Open),
-			b:          timespan.NewEmpty(t2, t3, timespan.Closed, timespan.Open),
+			a:          timespan.NewEmptyWithTypes(t1, t2, timespan.Closed, timespan.Open),
+			b:          timespan.NewEmptyWithTypes(t2, t3, timespan.Closed, timespan.Open),
 			mergeTypes: IntervalTypePair{timespan.Closed, timespan.Open},
 		},
 		{
 			//  [--a--)
 			//    (b]
 			name:       "overlap c/o o/c",
-			a:          timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Open),
-			b:          timespan.NewEmpty(t2, t3, timespan.Open, timespan.Closed),
+			a:          timespan.NewEmptyWithTypes(t1, t4, timespan.Closed, timespan.Open),
+			b:          timespan.NewEmptyWithTypes(t2, t3, timespan.Open, timespan.Closed),
 			mergeTypes: IntervalTypePair{timespan.Closed, timespan.Open},
 		},
 		{
 			//  [--a--)
 			//    [b)
 			name:       "overlap c/o c/o",
-			a:          timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Open),
-			b:          timespan.NewEmpty(t2, t3, timespan.Closed, timespan.Open),
+			a:          timespan.NewEmptyWithTypes(t1, t4, timespan.Closed, timespan.Open),
+			b:          timespan.NewEmptyWithTypes(t2, t3, timespan.Closed, timespan.Open),
 			mergeTypes: IntervalTypePair{timespan.Closed, timespan.Open},
 		},
 		{
 			//  (--a--]
 			//  [b]
 			name:       "overlap o/c start instant",
-			a:          timespan.NewEmpty(t1, t4, timespan.Open, timespan.Closed),
+			a:          timespan.NewEmptyWithTypes(t1, t4, timespan.Open, timespan.Closed),
 			b:          timespan.NewInstant(t1),
 			mergeTypes: IntervalTypePair{timespan.Closed, timespan.Closed},
 		},
@@ -77,7 +77,7 @@ func TestTypedUnion(t *testing.T) {
 			//  [--a--)
 			//       [b]
 			name:       "overlap c/o end instant",
-			a:          timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Open),
+			a:          timespan.NewEmptyWithTypes(t1, t4, timespan.Closed, timespan.Open),
 			b:          timespan.NewInstant(t4),
 			mergeTypes: IntervalTypePair{timespan.Closed, timespan.Closed},
 		},
@@ -132,32 +132,32 @@ func TestTypedIntersection(t *testing.T) {
 			//  [--a--)
 			//    (b]
 			name:              "overlap c/o o/c",
-			a:                 timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Open),
-			b:                 timespan.NewEmpty(t2, t3, timespan.Open, timespan.Closed),
+			a:                 timespan.NewEmptyWithTypes(t1, t4, timespan.Closed, timespan.Open),
+			b:                 timespan.NewEmptyWithTypes(t2, t3, timespan.Open, timespan.Closed),
 			intersectionTypes: IntervalTypePair{timespan.Open, timespan.Closed},
 		},
 		{
 			//  [--a--)
 			//    [b)
 			name:              "overlap c/o c/o",
-			a:                 timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Open),
-			b:                 timespan.NewEmpty(t2, t3, timespan.Closed, timespan.Open),
+			a:                 timespan.NewEmptyWithTypes(t1, t4, timespan.Closed, timespan.Open),
+			b:                 timespan.NewEmptyWithTypes(t2, t3, timespan.Closed, timespan.Open),
 			intersectionTypes: IntervalTypePair{timespan.Closed, timespan.Open},
 		},
 		{
 			//  [--a--]
 			//  (--b--)
 			name:              "overlap c/c o/o",
-			a:                 timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Closed),
-			b:                 timespan.NewEmpty(t1, t4, timespan.Open, timespan.Open),
+			a:                 timespan.NewEmptyWithTypes(t1, t4, timespan.Closed, timespan.Closed),
+			b:                 timespan.NewEmptyWithTypes(t1, t4, timespan.Open, timespan.Open),
 			intersectionTypes: IntervalTypePair{timespan.Open, timespan.Open},
 		},
 		{
 			//  [---a---]
 			//    (-b-)
 			name:              "overlap c/c o/o",
-			a:                 timespan.NewEmpty(t1, t4, timespan.Closed, timespan.Closed),
-			b:                 timespan.NewEmpty(t2, t3, timespan.Open, timespan.Open),
+			a:                 timespan.NewEmptyWithTypes(t1, t4, timespan.Closed, timespan.Closed),
+			b:                 timespan.NewEmptyWithTypes(t2, t3, timespan.Open, timespan.Open),
 			intersectionTypes: IntervalTypePair{timespan.Open, timespan.Open},
 		},
 	} {

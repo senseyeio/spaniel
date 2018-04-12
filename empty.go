@@ -25,17 +25,17 @@ func (ets *Empty) StartType() IntervalType { return ets.startType }
 func (ets *Empty) EndType() IntervalType { return ets.endType }
 
 // NewEmpty creates a span with just a start and end time, and associated types, and is used when no handlers are provided to Union or Intersection.
-func NewEmpty(start time.Time, end time.Time, startType IntervalType, endType IntervalType) *Empty {
+func NewEmptyWithTypes(start time.Time, end time.Time, startType IntervalType, endType IntervalType) *Empty {
 	return &Empty{start, end, startType, endType}
 }
 
 // NewEmptyTyped creates a span with a start and end time, with the types set to [] for instants and [) for spans.
-func NewEmptyTyped(start time.Time, end time.Time) *Empty {
+func NewEmpty(start time.Time, end time.Time) *Empty {
 	if start.Equal(end) {
 		// An instantaneous event has to be Closed (i.e. inclusive)
-		return NewEmpty(start, end, Closed, Closed)
+		return NewEmptyWithTypes(start, end, Closed, Closed)
 	}
-	return NewEmpty(start, end, Closed, Open)
+	return NewEmptyWithTypes(start, end, Closed, Open)
 }
 
 func (ets *Empty) String() string {
