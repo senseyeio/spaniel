@@ -3,7 +3,7 @@ GOPACKAGES = $(shell go list ./... | grep -v -e **/*/mock*)
 
 .PHONY: default errcheck fmt lint test tools vet
 
-default: errcheck fmt lint test vet
+default: tools errcheck fmt lint test vet
 
 errcheck:
 	@for pkg in $(GOPACKAGES); do errcheck -asserts $$pkg; done

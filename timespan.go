@@ -258,14 +258,6 @@ func (ts List) Union() List {
 	})
 }
 
-// [1,2,3,4,5]  [4,5,6]    = [4,5]
-// [1,2,3,4,5) [4,5,6] = [4,5)
-
-// [10:00 - 13:00)     [12:00 - 14:00]   [12:00-13:00)
-
-// [10:00 - 13:00)
-//
-
 // IntersectionWithHandler returns a list of TimeSpans representing the overlaps between the contained time spans.
 // For example, given a list [A,B] where A and B overlap, a list [C] would be returned, with the timespan C covering
 // the intersection of the A and B. The provided handler function is notified of the two timespans that have been found
