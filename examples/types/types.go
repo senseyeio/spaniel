@@ -23,7 +23,6 @@ func main() {
 	fmt.Println("And there will be no intersections:")
 	fmt.Println(intersection)
 
-
 	input = spaniel.List{
 		spaniel.NewEmpty(now, now.Add(1*time.Hour), spaniel.Closed, spaniel.Closed),
 		spaniel.NewEmpty(now.Add(1*time.Hour), now.Add(2*time.Hour), spaniel.Closed, spaniel.Closed),
@@ -35,7 +34,6 @@ func main() {
 	intersection = input.Intersection()
 	fmt.Println("And there will be an instantaneous intersection:")
 	fmt.Println(intersection)
-
 
 	input = spaniel.List{
 		spaniel.NewEmpty(now, now.Add(1*time.Hour), spaniel.Closed, spaniel.Open),
