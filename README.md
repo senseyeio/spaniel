@@ -24,8 +24,8 @@ To create a new list of timespans:
 	var now = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
 
 	input := timespan.List{
-		timespan.NewEmpty(now, now.Add(1*time.Hour)),
-		timespan.NewEmpty(now.Add(30*time.Minute), now.Add(90*time.Minute)),
+		timespan.New(now, now.Add(1*time.Hour)),
+		timespan.New(now.Add(30*time.Minute), now.Add(90*time.Minute)),
 	}
 
     
@@ -41,11 +41,11 @@ Or the Intersection function to find the overlaps:
  
  ### Types
  
- NewEmpty sets the span to be [) by default - i.e. including the left-most point, excluding the right-most. In other words, [1,2,3) and [3,4,5) do not overlap, but are contiguous. Instants are [] by default (they contain a single time).
+`timespan.New` sets the span to be [) by default - i.e. including the left-most point, excluding the right-most. In other words, [1,2,3) and [3,4,5) do not overlap, but are contiguous. Instants are [] by default (they contain a single time).
 
-If you would like to override these types, you can use NewEmptyWithTypes:
+If you would like to override these types, you can use NewWithTypes:
 
-    openSpan := timespan.NewEmptyWithTypes(now, now.Add(1*time.Hour)), timespan.Open, timespan.Open)
+    openSpan := timespan.NewWithTypes(now, now.Add(1*time.Hour)), timespan.Open, timespan.Open)
  
  ### Handlers
  

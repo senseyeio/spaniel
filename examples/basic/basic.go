@@ -8,11 +8,15 @@ import (
 
 func main() {
 
-	var now = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
+	// Times at half-hourly intervals
+	var t1 = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
+	var t2 = time.Date(2018, 1, 30, 0, 30, 0, 0, time.UTC)
+	var t3 = time.Date(2018, 1, 30, 1, 0, 0, 0, time.UTC)
+	var t4 = time.Date(2018, 1, 30, 1, 30, 0, 0, time.UTC)
 
 	input := spaniel.List{
-		spaniel.NewEmpty(now, now.Add(1*time.Hour)),
-		spaniel.NewEmpty(now.Add(30*time.Minute), now.Add(90*time.Minute)),
+		spaniel.New(t1, t3),
+		spaniel.New(t2, t4),
 	}
 
 	union := input.Union()

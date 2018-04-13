@@ -57,11 +57,16 @@ var mergeProperties = func(a []string, b []string) []string {
 
 func main() {
 
-	var now = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
+
+	// Times at half-hourly intervals
+	var t1 = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
+	var t2 = time.Date(2018, 1, 30, 0, 30, 0, 0, time.UTC)
+	var t3 = time.Date(2018, 1, 30, 1, 0, 0, 0, time.UTC)
+	var t4 = time.Date(2018, 1, 30, 1, 30, 0, 0, time.UTC)
 
 	input := spaniel.List{
-		NewPropertyEvent(now, now.Add(1*time.Hour), []string{"1"}),
-		NewPropertyEvent(now.Add(30*time.Minute), now.Add(90*time.Minute), []string{"2"}),
+		NewPropertyEvent(t1, t3, []string{"1"}),
+		NewPropertyEvent(t2, t4, []string{"2"}),
 	}
 
 	var mergeHandlerFunc spaniel.MergeHandlerFunc = func(mergeInto, mergeFrom spaniel.T, mergeSpan spaniel.T) spaniel.T {
