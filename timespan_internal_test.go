@@ -95,6 +95,7 @@ func TestOpenedClosedSpans(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 
+			t.Parallel()
 			obtained := overlap(tt.a, tt.b)
 			if obtained != tt.expectedOverlap {
 				t.Errorf("in order, overlap")
@@ -198,6 +199,7 @@ func TestClosedOpenedSpans(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 
+			t.Parallel()
 			obtained := overlap(tt.a, tt.b)
 			if obtained != tt.expectedOverlap {
 				t.Errorf("in order, overlap")
@@ -302,6 +304,7 @@ func TestOpenedSpans(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 
+			t.Parallel()
 			obtained := overlap(tt.a, tt.b)
 			if obtained != tt.expectedOverlap {
 				t.Errorf("in order, overlap")
@@ -420,6 +423,8 @@ func TestClosedSpans(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
+
+			t.Parallel()
 			obtained := overlap(tt.a, tt.b)
 			if obtained != tt.expectedOverlap {
 				t.Errorf("in order, overlap")

@@ -83,6 +83,7 @@ func TestTypedUnion(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
 			input := timespan.List{
 				tt.a, tt.b,
@@ -162,6 +163,7 @@ func TestTypedIntersection(t *testing.T) {
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			input := timespan.List{
 				tt.a, tt.b,
 			}
