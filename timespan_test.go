@@ -12,8 +12,8 @@ import (
 type Event struct {
 	start     time.Time
 	end       time.Time
-	startType timespan.IntervalType
-	endType   timespan.IntervalType
+	startType timespan.EndPointType
+	endType   timespan.EndPointType
 }
 
 func NewEvent(start time.Time, end time.Time) *Event {
@@ -27,19 +27,19 @@ func (e *Event) End() time.Time {
 	return e.end
 }
 
-func (e *Event) StartType() timespan.IntervalType {
+func (e *Event) StartType() timespan.EndPointType {
 	return e.startType
 }
 
-func (e *Event) EndType() timespan.IntervalType {
+func (e *Event) EndType() timespan.EndPointType {
 	return e.endType
 }
 
-func (e *Event) SetStartType(startType timespan.IntervalType) {
+func (e *Event) SetStartType(startType timespan.EndPointType) {
 	e.startType = startType
 }
 
-func (e *Event) SetEndType(endType timespan.IntervalType) {
+func (e *Event) SetEndType(endType timespan.EndPointType) {
 	e.endType = endType
 }
 

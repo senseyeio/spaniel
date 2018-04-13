@@ -8,8 +8,8 @@ import (
 type Empty struct {
 	start     time.Time
 	end       time.Time
-	startType IntervalType
-	endType   IntervalType
+	startType EndPointType
+	endType   EndPointType
 }
 
 // Start returns the start time of a span
@@ -19,14 +19,19 @@ func (ets *Empty) Start() time.Time { return ets.start }
 func (ets *Empty) End() time.Time { return ets.end }
 
 // StartType returns the type of the start of the interval (Open in this case)
-func (ets *Empty) StartType() IntervalType { return ets.startType }
+func (ets *Empty) StartType() EndPointType { return ets.startType }
 
 // EndType returns the type of the end of the interval (Closed in this case)
-func (ets *Empty) EndType() IntervalType { return ets.endType }
+func (ets *Empty) EndType() EndPointType { return ets.endType }
 
 // NewEmpty creates a span with just a start and end time, and associated types, and is used when no handlers are provided to Union or Intersection.
-func NewEmptyWithTypes(start time.Time, end time.Time, startType IntervalType, endType IntervalType) *Empty {
+func NewEmptyWithTypes(start time.Time, end time.Time, startType EndPointType, endType EndPointType) *Empty {
 	return &Empty{start, end, startType, endType}
+}
+
+// NewInstant creates a span with just a single time.
+func NewInstant(time time.Time) *Empty {
+	return NewEmpty(time, time)
 }
 
 // NewEmptyTyped creates a span with a start and end time, with the types set to [] for instants and [) for spans.
@@ -45,9 +50,12 @@ func (ets *Empty) String() string {
 	} else {
 		s += "("
 	}
+
 	s += ets.Start().String()
-	s += ","
-	s += ets.End().String()
+	if ets.Start() != ets.End() {
+		s += ","
+		s += ets.End().String()
+	}
 
 	if ets.EndType() == Closed {
 		s += "]"

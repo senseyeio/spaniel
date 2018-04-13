@@ -25,12 +25,12 @@ func (e *PropertyEvent) End() time.Time {
 }
 
 // StartType represents the type of the start of the interval (Closed in this case).
-func (e *PropertyEvent) StartType() spaniel.IntervalType {
+func (e *PropertyEvent) StartType() spaniel.EndPointType {
 	return spaniel.Closed
 }
 
 // EndType represents the type of the end of the interval (Open in this case).
-func (e *PropertyEvent) EndType() spaniel.IntervalType {
+func (e *PropertyEvent) EndType() spaniel.EndPointType {
 	return spaniel.Open
 }
 

@@ -5,22 +5,31 @@ import (
 	"time"
 )
 
-// IntervalType represents whether the start or end of an interval is Closed or Open.
-type IntervalType int
+// EndPointType represents whether the start or end of an interval is Closed or Open.
+type EndPointType int
 
 const (
 	// Open means that the interval does not include a value
-	Open IntervalType = iota
+	Open EndPointType = iota
 	// Closed means that the interval does include a value
 	Closed
 )
 
+type EndPoint struct {
+	Element time.Time
+	Type    EndPointType
+}
+
+func (e EndPoint) Before(a EndPoint) bool { return e.Element.Before(a.Element) }
+func (e EndPoint) After(a EndPoint) bool  { return e.Element.After(a.Element) }
+func (e EndPoint) Equal(a EndPoint) bool  { return e.Element.Equal(a.Element) }
+
 // T represents a basic timespan, with a start and end time.
 type T interface {
 	Start() time.Time
+	StartType() EndPointType
 	End() time.Time
-	StartType() IntervalType
-	EndType() IntervalType
+	EndType() EndPointType
 }
 
 // List represents a list of timespans, on which other functions operate.
@@ -41,64 +50,32 @@ type MergeHandlerFunc func(mergeInto, mergeFrom, mergeSpan T) T
 // intersect. It is passed the two timespans that intersect, and the start and end times at which they overlap.
 type IntersectionHandlerFunc func(intersectingEvent1, intersectingEvent2, intersectionSpan T) T
 
-func getLoosestIntervalType(x, y IntervalType) IntervalType {
+func getLoosestIntervalType(x, y EndPointType) EndPointType {
 	if x > y {
 		return x
 	}
 	return y
 }
 
-func getTightestIntervalType(x, y IntervalType) IntervalType {
+func getTightestIntervalType(x, y EndPointType) EndPointType {
 	if x < y {
 		return x
 	}
 	return y
 }
 
-func getMinStart(a, b T) (time.Time, IntervalType) {
-	minStart := b.Start()
-	minType := b.StartType()
-
-	if a.Start().Before(b.Start()) {
-		minStart = a.Start()
-		minType = a.StartType()
+func getMin(a, b EndPoint) EndPoint {
+	if a.Before(b) {
+		return a
 	}
-
-	return minStart, minType
+	return b
 }
 
-func getMaxStart(a, b T) (time.Time, IntervalType) {
-	maxStart := b.Start()
-	maxType := b.StartType()
-
-	if a.Start().After(b.Start()) {
-		maxStart = a.Start()
-		maxType = a.StartType()
+func getMax(a, b EndPoint) EndPoint {
+	if a.After(b) {
+		return a
 	}
-	return maxStart, maxType
-}
-
-func getMinEnd(a, b T) (time.Time, IntervalType) {
-
-	minEnd := b.End()
-	minType := b.EndType()
-
-	if a.End().Before(b.End()) {
-		minEnd = a.End()
-		minType = a.EndType()
-	}
-	return minEnd, minType
-}
-
-func getMaxEnd(a, b T) (time.Time, IntervalType) {
-	maxEnd := b.End()
-	maxType := b.EndType()
-
-	if a.End().After(b.End()) {
-		maxEnd = a.End()
-		maxType = a.EndType()
-	}
-	return maxEnd, maxType
+	return b
 }
 
 func filter(timeSpans List, filterFunc func(T) bool) List {
@@ -228,17 +205,17 @@ func (ts List) UnionWithHandler(mergeHandlerFunc MergeHandlerFunc) List {
 		a := result[len(result)-1]
 		if overlap(a, b) || contiguous(a, b) {
 
-			maxTime, endType := getMaxEnd(a, b)
-			minTime, startType := getMinStart(a, b)
+			spanStart := getMin(EndPoint{a.Start(), a.StartType()}, EndPoint{b.Start(), b.StartType()})
+			spanEnd := getMax(EndPoint{a.End(), a.EndType()}, EndPoint{b.End(), b.EndType()})
 
 			if a.Start().Equal(b.Start()) {
-				startType = getLoosestIntervalType(a.StartType(), b.StartType())
+				spanStart.Type = getLoosestIntervalType(a.StartType(), b.StartType())
 			}
 			if a.End().Equal(b.End()) {
-				endType = getLoosestIntervalType(a.EndType(), b.EndType())
+				spanEnd.Type = getLoosestIntervalType(a.EndType(), b.EndType())
 			}
 
-			span := NewEmptyWithTypes(minTime, maxTime, startType, endType)
+			span := NewEmptyWithTypes(spanStart.Element, spanEnd.Element, spanStart.Type, spanEnd.Type)
 			result[len(result)-1] = mergeHandlerFunc(a, b, span)
 
 			continue
@@ -284,15 +261,16 @@ func (ts List) IntersectionWithHandler(intersectHandlerFunc IntersectionHandlerF
 
 		for _, a := range actives {
 			if overlap(a, b) {
-				start, startType := getMaxStart(b, a)
-				end, endType := getMinEnd(b, a)
+				spanStart := getMax(EndPoint{a.Start(), a.StartType()}, EndPoint{b.Start(), b.StartType()})
+				spanEnd := getMin(EndPoint{a.End(), a.EndType()}, EndPoint{b.End(), b.EndType()})
+
 				if a.Start().Equal(b.Start()) {
-					startType = getTightestIntervalType(a.StartType(), b.StartType())
+					spanStart.Type = getTightestIntervalType(a.StartType(), b.StartType())
 				}
 				if a.End().Equal(b.End()) {
-					endType = getTightestIntervalType(a.EndType(), b.EndType())
+					spanEnd.Type = getTightestIntervalType(a.EndType(), b.EndType())
 				}
-				span := NewEmptyWithTypes(start, end, startType, endType)
+				span := NewEmptyWithTypes(spanStart.Element, spanEnd.Element, spanStart.Type, spanEnd.Type)
 				intersection := intersectHandlerFunc(a, b, span)
 				intersections = append(intersections, intersection)
 			}

@@ -14,8 +14,8 @@ var (
 )
 
 type IntervalTypePair struct {
-	startType timespan.IntervalType
-	endType   timespan.IntervalType
+	startType timespan.EndPointType
+	endType   timespan.EndPointType
 }
 
 func TestTypedUnion(t *testing.T) {
