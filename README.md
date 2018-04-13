@@ -11,15 +11,9 @@ This package is "go-gettable", just do:
 
     go get github.com/senseyeio/spaniel
 
-## Examples
-
-These examples are all available in the ``examples`` folder.
-
 ### Basics
 
-Spaniel operates on lists of timespans, where a timespan is represented as the interval between a start and end time.
-
-it has a built-in minimal timespan representation for convenience, or you can use your own type, so long as it implements the timespan.T interface.
+Spaniel operates on lists of timespans, where a timespan is represented as the interval between a start and end time. It has a built-in minimal timespan representation for convenience, or you can use your own type, so long as it implements the timespan.T interface.
 
 To create a new list of timespans:
 
@@ -46,7 +40,7 @@ Or the Intersection function to find the overlaps:
 	intersection := input.Intersection()
 	fmt.Println(intersection[0].Start(), "->", intersection[0].End()) // 2018-01-30 00:30:00 +0000 UTC -> 2018-01-30 01:00:00 +0000 UTC
  
- ### Types
+### Types
  
 `timespan.New` sets the span to be [`[)`](https://en.wikipedia.org/wiki/Interval_(mathematics)#Notations_for_intervals) by default - i.e. including the left-most point, excluding the right-most. In other words, `[1,2,3)` and `[3,4,5)` do not overlap, but are contiguous. Instants are `[]` by default (they contain a single time).
 
@@ -54,9 +48,13 @@ If you would like to override these types, you can use NewWithTypes:
 
     openSpan := timespan.NewWithTypes(now, now.Add(1*time.Hour)), timespan.Open, timespan.Open)
  
- You can see a more involved example of types in ``examples/types/types.go``
+You can see a more involved example of types in ``examples/types/types.go``
  
- ### Handlers
+### Handlers
  
- If you need to use a more complex object, you can call UnionWithHandler and IntersectionWithHandler. There is an
- example of this in ``examples/handlers/handlers.go``.
+If you need to use a more complex object, you can call UnionWithHandler and IntersectionWithHandler. There is an example of this in ``examples/handlers/handlers.go``.
+
+
+### More Examples
+
+All of the above examples are available in the ``examples`` folder.
