@@ -20,8 +20,8 @@ func main() {
 	}
 
 	union := input.Union()
-	fmt.Println(union[0].Start(), union[0].End())
+	fmt.Println(union[0].Start(), "->", union[0].End())
 
 	intersection := input.Intersection()
-	fmt.Println(intersection[0].Start(), intersection[0].End())
+	fmt.Println(intersection[0].Start(), "->", intersection[0].End())
 }
