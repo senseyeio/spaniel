@@ -12,145 +12,6 @@ var (
 	t4 = t3.Add(time.Second)
 )
 
-type IntervalTypePair struct {
-	startType IntervalType
-	endType   IntervalType
-}
-
-func TestIntersectionTypes(t *testing.T) {
-
-	for _, tt := range []struct {
-		name              string
-		a, b              T
-		intersectionTypes IntervalTypePair
-	}{
-		{
-			//  [--a--)
-			//    (b]
-			name:              "overlap c/o o/c",
-			a:                 NewEmptyWithTypes(t1, t4, Closed, Open),
-			b:                 NewEmptyWithTypes(t2, t3, Open, Closed),
-			intersectionTypes: IntervalTypePair{Open, Closed},
-		},
-		{
-			//  [--a--)
-			//    [b)
-			name:              "overlap c/o c/o",
-			a:                 NewEmptyWithTypes(t1, t4, Closed, Open),
-			b:                 NewEmptyWithTypes(t2, t3, Closed, Open),
-			intersectionTypes: IntervalTypePair{Closed, Open},
-		},
-		{
-			//  (--a--]
-			//  [b]
-			name:              "overlap o/c start instant",
-			a:                 NewEmptyWithTypes(t1, t4, Open, Closed),
-			b:                 NewInstant(t1),
-			intersectionTypes: IntervalTypePair{Open, Closed},
-		},
-		{
-			//  [---a---]
-			//    (-b-)
-			name:              "overlap c/c o/o",
-			a:                 NewEmptyWithTypes(t1, t4, Closed, Closed),
-			b:                 NewEmptyWithTypes(t2, t3, Open, Open),
-			intersectionTypes: IntervalTypePair{Open, Open},
-		},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			empty := NewEmpty(t1, t2)
-			intersectionEvent := addIntersectionTypes(tt.a, tt.b, empty)
-
-			if intersectionEvent.StartType() != tt.intersectionTypes.startType {
-				t.Errorf("intersection start")
-			}
-
-			if intersectionEvent.EndType() != tt.intersectionTypes.endType {
-				t.Errorf("intersection end")
-			}
-		})
-	}
-}
-
-func TestMergeTypes(t *testing.T) {
-
-	for _, tt := range []struct {
-		name       string
-		a, b       T
-		mergeTypes IntervalTypePair
-	}{
-		{
-			//  (--a--]
-			//        (--b--]
-			name:       "contiguous o/c o/c",
-			a:          NewEmptyWithTypes(t1, t2, Open, Closed),
-			b:          NewEmptyWithTypes(t3, t4, Open, Closed),
-			mergeTypes: IntervalTypePair{Open, Closed},
-		},
-		{
-			//  [--a--]
-			//        (--b--)
-			name:       "contiguous c/c o/o",
-			a:          NewEmptyWithTypes(t1, t2, Closed, Closed),
-			b:          NewEmptyWithTypes(t3, t4, Open, Open),
-			mergeTypes: IntervalTypePair{Closed, Open},
-		},
-		{
-			//  [--a--)
-			//        [--b--)
-			name:       "contiguous c/o c/o",
-			a:          NewEmptyWithTypes(t1, t2, Closed, Open),
-			b:          NewEmptyWithTypes(t3, t4, Closed, Open),
-			mergeTypes: IntervalTypePair{Closed, Open},
-		},
-		{
-			//  [--a--)
-			//    (b]
-			name:       "overlap c/o o/c",
-			a:          NewEmptyWithTypes(t1, t4, Closed, Open),
-			b:          NewEmptyWithTypes(t2, t3, Open, Closed),
-			mergeTypes: IntervalTypePair{Closed, Open},
-		},
-		{
-			//  [--a--)
-			//    [b)
-			name:       "overlap c/o c/o",
-			a:          NewEmptyWithTypes(t1, t4, Closed, Open),
-			b:          NewEmptyWithTypes(t2, t3, Closed, Open),
-			mergeTypes: IntervalTypePair{Closed, Open},
-		},
-		{
-			//  (--a--]
-			//  [b]
-			name:       "overlap o/c start instant",
-			a:          NewEmptyWithTypes(t1, t4, Open, Closed),
-			b:          NewInstant(t1),
-			mergeTypes: IntervalTypePair{Closed, Closed},
-		},
-		{
-			//  [--a--)
-			//       [b]
-			name:       "overlap c/o end instant",
-			a:          NewEmptyWithTypes(t1, t4, Closed, Open),
-			b:          NewInstant(t4),
-			mergeTypes: IntervalTypePair{Closed, Closed},
-		},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			empty := NewEmpty(t1, t2)
-			mergedEvent := addUnionTypes(tt.a, tt.b, empty)
-
-			if mergedEvent.StartType() != tt.mergeTypes.startType {
-				t.Errorf("merge start")
-			}
-
-			if mergedEvent.EndType() != tt.mergeTypes.endType {
-				t.Errorf("merge end")
-			}
-		})
-	}
-}
-
 func TestOpenedClosedSpans(t *testing.T) {
 	for _, tt := range []struct {
 		name               string
@@ -234,6 +95,7 @@ func TestOpenedClosedSpans(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 
+			t.Parallel()
 			obtained := overlap(tt.a, tt.b)
 			if obtained != tt.expectedOverlap {
 				t.Errorf("in order, overlap")
@@ -337,6 +199,7 @@ func TestClosedOpenedSpans(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 
+			t.Parallel()
 			obtained := overlap(tt.a, tt.b)
 			if obtained != tt.expectedOverlap {
 				t.Errorf("in order, overlap")
@@ -441,6 +304,7 @@ func TestOpenedSpans(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 
+			t.Parallel()
 			obtained := overlap(tt.a, tt.b)
 			if obtained != tt.expectedOverlap {
 				t.Errorf("in order, overlap")
@@ -482,8 +346,8 @@ func TestClosedSpans(t *testing.T) {
 			name:               "contiguous",
 			a:                  NewEmpty(t1, t2),
 			b:                  NewEmpty(t2, t3),
-			expectedOverlap:    true,
-			expectedContiguous: false,
+			expectedOverlap:    false,
+			expectedContiguous: true,
 		}, {
 			//  [---a----]
 			//        [---b----]
@@ -513,7 +377,7 @@ func TestClosedSpans(t *testing.T) {
 			//           [b]
 			name:               "span vs instant, no overlap",
 			a:                  NewEmpty(t1, t3),
-			b:                  NewInstant(t4),
+			b:                  NewEmpty(t4, t4),
 			expectedOverlap:    false,
 			expectedContiguous: false,
 		}, {
@@ -521,7 +385,7 @@ func TestClosedSpans(t *testing.T) {
 			//    [b]
 			name:               "span vs instant, overlap on the start border",
 			a:                  NewEmpty(t1, t3),
-			b:                  NewInstant(t1),
+			b:                  NewEmpty(t1, t1),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
@@ -529,7 +393,7 @@ func TestClosedSpans(t *testing.T) {
 			//      [b]
 			name:               "span vs instant, overlap in the middle",
 			a:                  NewEmpty(t1, t3),
-			b:                  NewInstant(t2),
+			b:                  NewEmpty(t2, t2),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		}, {
@@ -537,28 +401,30 @@ func TestClosedSpans(t *testing.T) {
 			//        [b]
 			name:               "span vs instant, overlap at the end",
 			a:                  NewEmpty(t1, t3),
-			b:                  NewInstant(t3),
-			expectedOverlap:    true,
-			expectedContiguous: false,
+			b:                  NewEmpty(t3, t3),
+			expectedOverlap:    false,
+			expectedContiguous: true,
 		}, {
 			//    [a]
 			//         [b]
 			name:               "both instants, no overlap",
-			a:                  NewInstant(t1),
-			b:                  NewInstant(t2),
+			a:                  NewEmpty(t1, t1),
+			b:                  NewEmpty(t2, t2),
 			expectedOverlap:    false,
 			expectedContiguous: false,
 		}, {
 			//    [a]
 			//    [b]
 			name:               "both instants, overlap",
-			a:                  NewInstant(t1),
-			b:                  NewInstant(t1),
+			a:                  NewEmpty(t1, t1),
+			b:                  NewEmpty(t1, t1),
 			expectedOverlap:    true,
 			expectedContiguous: false,
 		},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
+
+			t.Parallel()
 			obtained := overlap(tt.a, tt.b)
 			if obtained != tt.expectedOverlap {
 				t.Errorf("in order, overlap")

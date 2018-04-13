@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/senseyeio/spaniel"
 	"time"
-	"fmt"
 )
 
 func main() {

@@ -5,19 +5,31 @@ import (
 	"time"
 )
 
-type IntervalType int
+// EndPointType represents whether the start or end of an interval is Closed or Open.
+type EndPointType int
 
 const (
-	Open IntervalType = iota
+	// Open means that the interval does not include a value
+	Open EndPointType = iota
+	// Closed means that the interval does include a value
 	Closed
 )
+
+type EndPoint struct {
+	Element time.Time
+	Type    EndPointType
+}
+
+func (e EndPoint) Before(a EndPoint) bool { return e.Element.Before(a.Element) }
+func (e EndPoint) After(a EndPoint) bool  { return e.Element.After(a.Element) }
+func (e EndPoint) Equal(a EndPoint) bool  { return e.Element.Equal(a.Element) }
 
 // T represents a basic timespan, with a start and end time.
 type T interface {
 	Start() time.Time
+	StartType() EndPointType
 	End() time.Time
-	StartType() IntervalType
-	EndType() IntervalType
+	EndType() EndPointType
 }
 
 // List represents a list of timespans, on which other functions operate.
@@ -30,30 +42,37 @@ func (s ByStart) Len() int           { return len(s) }
 func (s ByStart) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s ByStart) Less(i, j int) bool { return s[i].Start().Before(s[j].Start()) }
 
-// ByEnd sorts a list of timespans by their end time
-type ByEnd List
-
-func (s ByEnd) Len() int           { return len(s) }
-func (s ByEnd) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s ByEnd) Less(i, j int) bool { return s[i].End().Before(s[j].End()) }
-
 // MergeHandlerFunc is used by UnionWithHandler to allow for custom functionality when two spans are merged.
-// It is passed the two timespans, and the span which would be the result of the merge.
+// It is passed the two timespans, and the start and end times of the new span.
 type MergeHandlerFunc func(mergeInto, mergeFrom, mergeSpan T) T
 
 // IntersectionHandlerFunc is used by IntersectionWithHandler to allow for custom functionality when two spans
-// intersect. It is passed the two timespans that intersect, span that represents the intersection.
+// intersect. It is passed the two timespans that intersect, and the start and end times at which they overlap.
 type IntersectionHandlerFunc func(intersectingEvent1, intersectingEvent2, intersectionSpan T) T
 
-func getMaxTime(a, b time.Time) time.Time {
-	if a.After(b) {
+func getLoosestIntervalType(x, y EndPointType) EndPointType {
+	if x > y {
+		return x
+	}
+	return y
+}
+
+func getTightestIntervalType(x, y EndPointType) EndPointType {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+func getMin(a, b EndPoint) EndPoint {
+	if a.Before(b) {
 		return a
 	}
 	return b
 }
 
-func getMinTime(a, b time.Time) time.Time {
-	if a.Before(b) {
+func getMax(a, b EndPoint) EndPoint {
+	if a.After(b) {
 		return a
 	}
 	return b
@@ -69,78 +88,9 @@ func filter(timeSpans List, filterFunc func(T) bool) List {
 	return filtered
 }
 
-func addUnionTypes(a, b, result T) T {
-	// If [a,b,c] and (a,b,c) start type becomes [, end type becomes ] - the more permissive option
-	var startType, endType IntervalType
-
-	pair := List{a, b}
-
-	if a.Start().Equal(b.Start()) {
-		if a.StartType() == b.StartType() {
-			// If the start types match, it's easy
-			startType = a.StartType()
-		} else {
-			// If they differ, one must be closed - so choose that.
-			startType = Closed
-		}
-	} else {
-		// Find which starts first and choose its type
-		sort.Stable(ByStart(pair))
-		startType = pair[0].StartType()
-	}
-
-	if a.End().Equal(b.End()) {
-		if a.EndType() == b.EndType() {
-			// If the start types match, it's easy
-			endType = a.EndType()
-		} else {
-			// If they differ, one must be closed - so choose that.
-			endType = Closed
-		}
-	} else {
-		// Find which pair ends last and choose its type
-		sort.Stable(ByEnd(pair))
-		endType = pair[1].EndType()
-	}
-
-	return NewEmptyWithTypes(result.Start(), result.End(), startType, endType)
-}
-
-func addIntersectionTypes(a, b, result T) T {
-	// If [a,b,c,d] and (b,c], we expect to get (b,c] back - the more restrictive option
-	// if [a,b,c,d] and [b,c], we expect to get [b,c] back
-
-	var startType, endType IntervalType
-
-	pair := List{a, b}
-
-	if a.Start().Equal(b.Start()) {
-		if a.StartType() == b.StartType() {
-			startType = a.StartType()
-		} else {
-			// If they differ, one must be open - so choose that.
-			startType = Open
-		}
-	} else {
-		// Find which starts last and choose its type
-		sort.Stable(ByStart(pair))
-		startType = pair[1].StartType()
-	}
-
-	if a.End().Equal(b.End()) {
-		if a.EndType() == b.EndType() {
-			endType = a.EndType()
-		} else {
-			// If they differ, one must be open - so choose that.
-			endType = Open
-		}
-	} else {
-		// Find which pair ends first and choose its type
-		sort.Stable(ByEnd(pair))
-		endType = pair[0].EndType()
-	}
-
-	return NewEmptyWithTypes(result.Start(), result.End(), startType, endType)
+// IsInstant returns true if the interval is deemed instantaneous
+func IsInstant(a T) bool {
+	return a.Start().Equal(a.End())
 }
 
 // Returns true if two timespans are side by side
@@ -150,8 +100,9 @@ func contiguous(a, b T) bool {
 	// [1,2,3,4] (4,5,6,7] - contiguous
 	// [1,2,3,4) (4,5,6,7] - not contiguous
 	// [1,2,3] [5,6,7] - not contiguous
+	// [1] (1,2,3] - contiguous
 
-	// Both instants, they can't be contiguous
+	// Two instants can't be contiguous
 	if IsInstant(a) && IsInstant(b) {
 		return false
 	}
@@ -160,30 +111,21 @@ func contiguous(a, b T) bool {
 		a, b = b, a
 	}
 
-	// If one is an instant; if they match the start or end of the other, and the other type is open
-	// they are contiguous
-	if IsInstant(a) {
-		if a.End().Equal(b.Start()) {
-			return b.StartType() == Open
-		} else if a.End().Equal(b.End()) {
-			return b.EndType() == Open
-		}
-	} else if IsInstant(b) {
-		if b.End().Equal(a.Start()) {
-			return a.StartType() == Open
-		} else if b.End().Equal(a.End()) {
-			return a.EndType() == Open
-		}
-	}
-
+	aStartType := a.StartType()
 	aEndType := a.EndType()
 	bStartType := b.StartType()
 
 	if IsInstant(a) {
 		aEndType = Closed
+		aStartType = Closed
 	}
 	if IsInstant(b) {
 		bStartType = Closed
+	}
+
+	// If a and b start at the same time, just check that their start types are different.
+	if a.Start().Equal(b.Start()) {
+		return aStartType != bStartType
 	}
 
 	// To be contiguous the ranges have to overlap on the first/last time
@@ -195,10 +137,6 @@ func contiguous(a, b T) bool {
 		return false
 	}
 	return true
-}
-
-func IsInstant(t T) bool {
-	return t.Start().Equal(t.End())
 }
 
 // Returns true if two timespans overlap
@@ -225,21 +163,21 @@ func overlap(a, b T) bool {
 	// Given [a_s,a_e] and [b_s,b_e]
 	// If a_s > b_e || a_e < b_s, overlap == false
 
-	c_1 := false // is a_s after b_e
+	c1 := false // is a_s after b_e
 	if a.Start().After(b.End()) {
-		c_1 = true
+		c1 = true
 	} else if a.Start().Equal(b.End()) {
-		c_1 = (aStartType == Open || bEndType == Open)
+		c1 = (aStartType == Open || bEndType == Open)
 	}
 
-	c_2 := false // is a_e before b_s
+	c2 := false // is a_e before b_s
 	if a.End().Before(b.Start()) {
-		c_2 = true
+		c2 = true
 	} else if a.End().Equal(b.Start()) {
-		c_2 = (aEndType == Open || bStartType == Open)
+		c2 = (aEndType == Open || bStartType == Open)
 	}
 
-	if c_1 || c_2 {
+	if c1 || c2 {
 		return false
 	}
 
@@ -266,8 +204,20 @@ func (ts List) UnionWithHandler(mergeHandlerFunc MergeHandlerFunc) List {
 		// If B overlaps with A, it can be merged with A.
 		a := result[len(result)-1]
 		if overlap(a, b) || contiguous(a, b) {
-			span := addUnionTypes(a, b, NewEmpty(a.Start(), getMaxTime(a.End(), b.End())))
+
+			spanStart := getMin(EndPoint{a.Start(), a.StartType()}, EndPoint{b.Start(), b.StartType()})
+			spanEnd := getMax(EndPoint{a.End(), a.EndType()}, EndPoint{b.End(), b.EndType()})
+
+			if a.Start().Equal(b.Start()) {
+				spanStart.Type = getLoosestIntervalType(a.StartType(), b.StartType())
+			}
+			if a.End().Equal(b.End()) {
+				spanEnd.Type = getLoosestIntervalType(a.EndType(), b.EndType())
+			}
+
+			span := NewEmptyWithTypes(spanStart.Element, spanEnd.Element, spanStart.Type, spanEnd.Type)
 			result[len(result)-1] = mergeHandlerFunc(a, b, span)
+
 			continue
 		}
 		result = append(result, b)
@@ -280,8 +230,8 @@ func (ts List) UnionWithHandler(mergeHandlerFunc MergeHandlerFunc) List {
 // For example, given a list [A,B] where A and B overlap, a list [C] would be returned, with the timespan C spanning
 // both A and B.
 func (ts List) Union() List {
-	return ts.UnionWithHandler(func(mergeInto, mergeFrom, overlapSpan T) T {
-		return overlapSpan
+	return ts.UnionWithHandler(func(mergeInto, mergeFrom, mergeSpan T) T {
+		return mergeSpan
 	})
 }
 
@@ -306,14 +256,21 @@ func (ts List) IntersectionWithHandler(intersectHandlerFunc IntersectionHandlerF
 				return false
 			}
 			// If this value starts after the one in actives finishes, filter the active.
-			return b.Start().After(t.End()) || b.Start().Equal(t.End())
+			return b.Start().After(t.End())
 		})
 
 		for _, a := range actives {
 			if overlap(a, b) {
-				start := getMaxTime(b.Start(), a.Start())
-				end := getMinTime(b.End(), a.End())
-				span := addIntersectionTypes(a, b, NewEmpty(start, end))
+				spanStart := getMax(EndPoint{a.Start(), a.StartType()}, EndPoint{b.Start(), b.StartType()})
+				spanEnd := getMin(EndPoint{a.End(), a.EndType()}, EndPoint{b.End(), b.EndType()})
+
+				if a.Start().Equal(b.Start()) {
+					spanStart.Type = getTightestIntervalType(a.StartType(), b.StartType())
+				}
+				if a.End().Equal(b.End()) {
+					spanEnd.Type = getTightestIntervalType(a.EndType(), b.EndType())
+				}
+				span := NewEmptyWithTypes(spanStart.Element, spanEnd.Element, spanStart.Type, spanEnd.Type)
 				intersection := intersectHandlerFunc(a, b, span)
 				intersections = append(intersections, intersection)
 			}
