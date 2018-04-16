@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/senseyeio/spaniel"
+	timespan "github.com/senseyeio/spaniel"
 	"sort"
 	"time"
 )
@@ -25,13 +25,13 @@ func (e *PropertyEvent) End() time.Time {
 }
 
 // StartType represents the type of the start of the interval (Closed in this case).
-func (e *PropertyEvent) StartType() spaniel.EndPointType {
-	return spaniel.Closed
+func (e *PropertyEvent) StartType() timespan.EndPointType {
+	return timespan.Closed
 }
 
 // EndType represents the type of the end of the interval (Open in this case).
-func (e *PropertyEvent) EndType() spaniel.EndPointType {
-	return spaniel.Open
+func (e *PropertyEvent) EndType() timespan.EndPointType {
+	return timespan.Open
 }
 
 // NewPropertyEvent creates a new PropertyEvent with start and end times and a list of properties.
@@ -57,19 +57,18 @@ var mergeProperties = func(a []string, b []string) []string {
 
 func main() {
 
-
 	// Times at half-hourly intervals
 	var t1 = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
 	var t2 = time.Date(2018, 1, 30, 0, 30, 0, 0, time.UTC)
 	var t3 = time.Date(2018, 1, 30, 1, 0, 0, 0, time.UTC)
 	var t4 = time.Date(2018, 1, 30, 1, 30, 0, 0, time.UTC)
 
-	input := spaniel.List{
+	input := timespan.List{
 		NewPropertyEvent(t1, t3, []string{"1"}),
 		NewPropertyEvent(t2, t4, []string{"2"}),
 	}
 
-	var mergeHandlerFunc spaniel.MergeHandlerFunc = func(mergeInto, mergeFrom spaniel.T, mergeSpan spaniel.T) spaniel.T {
+	var mergeHandlerFunc timespan.MergeHandlerFunc = func(mergeInto, mergeFrom timespan.T, mergeSpan timespan.T) timespan.T {
 		a, ok := mergeInto.(*PropertyEvent)
 		if !ok {
 			panic(fmt.Sprintf("Expected mergeInto to be a PropertyEvent"))
@@ -83,7 +82,7 @@ func main() {
 		return NewPropertyEvent(mergeSpan.Start(), mergeSpan.End(), mergeProperties(a.Properties, b.Properties))
 	}
 
-	var intersectionHandlerFunc spaniel.IntersectionHandlerFunc = func(intersectingEvent1, intersectingEvent2, intersectionSpan spaniel.T) spaniel.T {
+	var intersectionHandlerFunc timespan.IntersectionHandlerFunc = func(intersectingEvent1, intersectingEvent2, intersectionSpan timespan.T) timespan.T {
 		a, ok := intersectingEvent1.(*PropertyEvent)
 		if !ok {
 			panic(fmt.Errorf("Expected intersectingEvent1 to be a PropertyEvent"))

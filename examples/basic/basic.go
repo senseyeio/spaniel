@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/senseyeio/spaniel"
+	timespan "github.com/senseyeio/spaniel"
 	"time"
 )
 
@@ -14,9 +14,9 @@ func main() {
 	var t3 = time.Date(2018, 1, 30, 1, 0, 0, 0, time.UTC)
 	var t4 = time.Date(2018, 1, 30, 1, 30, 0, 0, time.UTC)
 
-	input := spaniel.List{
-		spaniel.New(t1, t3),
-		spaniel.New(t2, t4),
+	input := timespan.List{
+		timespan.New(t1, t3),
+		timespan.New(t2, t4),
 	}
 
 	union := input.Union()
