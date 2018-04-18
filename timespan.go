@@ -13,19 +13,19 @@ type TimeSpan struct {
 }
 
 // Start returns the start time of a span
-func (ts *TimeSpan) Start() time.Time { return ts.start }
+func (ts TimeSpan) Start() time.Time { return ts.start }
 
 // End returns the end time of a span
-func (ts *TimeSpan) End() time.Time { return ts.end }
+func (ts TimeSpan) End() time.Time { return ts.end }
 
 // StartType returns the type of the start of the interval (Open in this case)
-func (ts *TimeSpan) StartType() EndPointType { return ts.startType }
+func (ts TimeSpan) StartType() EndPointType { return ts.startType }
 
 // EndType returns the type of the end of the interval (Closed in this case)
-func (ts *TimeSpan) EndType() EndPointType { return ts.endType }
+func (ts TimeSpan) EndType() EndPointType { return ts.endType }
 
 // String returns a string representation of a timespan
-func (ts *TimeSpan) String() string {
+func (ts TimeSpan) String() string {
 	s := ""
 	if ts.StartType() == Closed {
 		s += "["
@@ -46,7 +46,6 @@ func (ts *TimeSpan) String() string {
 	}
 	return s
 }
-
 
 // NewWithTypes creates a span with just a start and end time, and associated types, and is used when no handlers are provided to Union or Intersection.
 func NewWithTypes(start, end time.Time, startType, endType EndPointType) *TimeSpan {

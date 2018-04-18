@@ -15,40 +15,37 @@ const (
 	Closed
 )
 
+// EndPoint represents an extreme of an interval, and whether it is inclusive or exclusive (Closed or Open)
 type EndPoint struct {
 	Element time.Time
 	Type    EndPointType
 }
 
-func (e EndPoint) Before(a EndPoint) bool { return e.Element.Before(a.Element) }
-func (e EndPoint) After(a EndPoint) bool  { return e.Element.After(a.Element) }
-func (e EndPoint) Equal(a EndPoint) bool  { return e.Element.Equal(a.Element) }
-
-// T represents a basic timespan, with a start and end time.
-type T interface {
+// Span represents a basic span, with a start and end time.
+type Span interface {
 	Start() time.Time
 	StartType() EndPointType
 	End() time.Time
 	EndType() EndPointType
 }
 
-// List represents a list of spans, on which other functions operate.
-type List []T
+// Spans represents a list of spans, on which other functions operate.
+type Spans []Span
 
-// ByStart sorts a list of timespans by their start time
-type ByStart List
+// ByStart sorts a list of spans by their start point
+type ByStart Spans
 
 func (s ByStart) Len() int           { return len(s) }
 func (s ByStart) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s ByStart) Less(i, j int) bool { return s[i].Start().Before(s[j].Start()) }
 
-// MergeHandlerFunc is used by UnionWithHandler to allow for custom functionality when two spans are merged.
-// It is passed the two timespans, and the start and end times of the new span.
-type MergeHandlerFunc func(mergeInto, mergeFrom, mergeSpan T) T
+// UnionHandlerFunc is used by UnionWithHandler to allow for custom functionality when two spans are merged.
+// It is passed the two spans to be merged, and span which will result from the union.
+type UnionHandlerFunc func(mergeInto, mergeFrom, mergeSpan Span) Span
 
 // IntersectionHandlerFunc is used by IntersectionWithHandler to allow for custom functionality when two spans
-// intersect. It is passed the two timespans that intersect, and the start and end times at which they overlap.
-type IntersectionHandlerFunc func(intersectingEvent1, intersectingEvent2, intersectionSpan T) T
+// intersect. It is passed the two spans that intersect, and span representing the intersection.
+type IntersectionHandlerFunc func(intersectingEvent1, intersectingEvent2, intersectionSpan Span) Span
 
 func getLoosestIntervalType(x, y EndPointType) EndPointType {
 	if x > y {
@@ -65,36 +62,36 @@ func getTightestIntervalType(x, y EndPointType) EndPointType {
 }
 
 func getMin(a, b EndPoint) EndPoint {
-	if a.Before(b) {
+	if a.Element.Before(b.Element) {
 		return a
 	}
 	return b
 }
 
 func getMax(a, b EndPoint) EndPoint {
-	if a.After(b) {
+	if a.Element.After(b.Element) {
 		return a
 	}
 	return b
 }
 
-func filter(timeSpans List, filterFunc func(T) bool) List {
-	filtered := List{}
-	for _, timeSpan := range timeSpans {
-		if !filterFunc(timeSpan) {
-			filtered = append(filtered, timeSpan)
+func filter(spans Spans, filterFunc func(Span) bool) Spans {
+	filtered := Spans{}
+	for _, span := range spans {
+		if !filterFunc(span) {
+			filtered = append(filtered, span)
 		}
 	}
 	return filtered
 }
 
 // IsInstant returns true if the interval is deemed instantaneous
-func IsInstant(a T) bool {
+func IsInstant(a Span) bool {
 	return a.Start().Equal(a.End())
 }
 
-// Returns true if two timespans are side by side
-func contiguous(a, b T) bool {
+// Returns true if two spans are side by side
+func contiguous(a, b Span) bool {
 	// [1,2,3,4] [4,5,6,7] - not contiguous
 	// [1,2,3,4) [4,5,6,7] - contiguous
 	// [1,2,3,4] (4,5,6,7] - contiguous
@@ -123,12 +120,12 @@ func contiguous(a, b T) bool {
 		bStartType = Closed
 	}
 
-	// If a and b start at the same time, just check that their start types are different.
+	// If a and b start at the same point, just check that their start types are different.
 	if a.Start().Equal(b.Start()) {
 		return aStartType != bStartType
 	}
 
-	// To be contiguous the ranges have to overlap on the first/last time
+	// To be contiguous the ranges have to overlap on the first/last point
 	if !(a.End().Equal(b.Start())) {
 		return false
 	}
@@ -139,8 +136,8 @@ func contiguous(a, b T) bool {
 	return true
 }
 
-// Returns true if two timespans overlap
-func overlap(a, b T) bool {
+// Returns true if two spans overlap
+func overlap(a, b Span) bool {
 	// [1,2,3,4] [4,5,6,7] - intersects
 	// [1,2,3,4) [4,5,6,7] - doesn't intersect
 	// [1,2,3,4] (4,5,6,7] - doesn't intersect
@@ -184,23 +181,23 @@ func overlap(a, b T) bool {
 	return true
 }
 
-// UnionWithHandler returns a list of TimeSpans representing the union of all of the time spans.
-// For example, given a list [A,B] where A and B overlap, a list [C] would be returned, with the timespan C spanning
-// both A and B. The provided handler is passed the source and destination timespans, and the currently merged empty timespan.
-func (ts List) UnionWithHandler(mergeHandlerFunc MergeHandlerFunc) List {
+// UnionWithHandler returns a list of Spans representing the union of all of the spans.
+// For example, given a list [A,B] where A and B overlap, a list [C] would be returned, with the span C spanning
+// both A and B. The provided handler is passed the source and destination spans, and the currently merged empty span.
+func (s Spans) UnionWithHandler(unionHandlerFunc UnionHandlerFunc) Spans {
 
-	if len(ts) < 2 {
-		return ts
+	if len(s) < 2 {
+		return s
 	}
 
-	var sorted List
-	sorted = append(sorted, ts...)
+	var sorted Spans
+	sorted = append(sorted, s...)
 	sort.Stable(ByStart(sorted))
 
-	result := List{sorted[0]}
+	result := Spans{sorted[0]}
 
 	for _, b := range sorted[1:] {
-		// A: current timespan in merged array; B: current timespan in sorted array
+		// A: current span in merged array; B: current span in sorted array
 		// If B overlaps with A, it can be merged with A.
 		a := result[len(result)-1]
 		if overlap(a, b) || contiguous(a, b) {
@@ -216,7 +213,7 @@ func (ts List) UnionWithHandler(mergeHandlerFunc MergeHandlerFunc) List {
 			}
 
 			span := NewWithTypes(spanStart.Element, spanEnd.Element, spanStart.Type, spanEnd.Type)
-			result[len(result)-1] = mergeHandlerFunc(a, b, span)
+			result[len(result)-1] = unionHandlerFunc(a, b, span)
 
 			continue
 		}
@@ -226,31 +223,31 @@ func (ts List) UnionWithHandler(mergeHandlerFunc MergeHandlerFunc) List {
 	return result
 }
 
-// Union returns a list of TimeSpans representing the union of all of the time spans.
-// For example, given a list [A,B] where A and B overlap, a list [C] would be returned, with the timespan C spanning
+// Union returns a list of Spans representing the union of all of the spans.
+// For example, given a list [A,B] where A and B overlap, a list [C] would be returned, with the span C spanning
 // both A and B.
-func (ts List) Union() List {
-	return ts.UnionWithHandler(func(mergeInto, mergeFrom, mergeSpan T) T {
+func (s Spans) Union() Spans {
+	return s.UnionWithHandler(func(mergeInto, mergeFrom, mergeSpan Span) Span {
 		return mergeSpan
 	})
 }
 
-// IntersectionWithHandler returns a list of TimeSpans representing the overlaps between the contained time spans.
-// For example, given a list [A,B] where A and B overlap, a list [C] would be returned, with the timespan C covering
-// the intersection of the A and B. The provided handler function is notified of the two timespans that have been found
+// IntersectionWithHandler returns a list of Spans representing the overlaps between the contained spans.
+// For example, given a list [A,B] where A and B overlap, a list [C] would be returned, with the span C covering
+// the intersection of the A and B. The provided handler function is notified of the two spans that have been found
 // to overlap, and the span representing the overlap.
-func (ts List) IntersectionWithHandler(intersectHandlerFunc IntersectionHandlerFunc) List {
-	var sorted List
-	sorted = append(sorted, ts...)
+func (s Spans) IntersectionWithHandler(intersectHandlerFunc IntersectionHandlerFunc) Spans {
+	var sorted Spans
+	sorted = append(sorted, s...)
 	sort.Stable(ByStart(sorted))
 
-	actives := List{sorted[0]}
+	actives := Spans{sorted[0]}
 
-	intersections := List{}
+	intersections := Spans{}
 
 	for _, b := range sorted[1:] {
 		// Tidy up the active span list
-		actives = filter(actives, func(t T) bool {
+		actives = filter(actives, func(t Span) bool {
 			// If this value is identical to one in actives, don't filter it.
 			if b.Start() == t.Start() && b.End() == t.End() {
 				return false
@@ -280,11 +277,11 @@ func (ts List) IntersectionWithHandler(intersectHandlerFunc IntersectionHandlerF
 	return intersections
 }
 
-// Intersection returns a list of TimeSpans representing the overlaps between the contained time spans.
+// Intersection returns a list of Spans representing the overlaps between the contained spans.
 // For example, given a list [A,B] where A and B overlap, a list [C] would be returned,
-// with the timespan C covering the intersection of the A and B.
-func (ts List) Intersection() List {
-	return ts.IntersectionWithHandler(func(intersectingEvent1, intersectingEvent2, intersectionSpan T) T {
+// with the span C covering the intersection of A and B.
+func (s Spans) Intersection() Spans {
+	return s.IntersectionWithHandler(func(intersectingEvent1, intersectingEvent2, intersectionSpan Span) Span {
 		return intersectionSpan
 	})
 }

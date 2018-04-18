@@ -24,7 +24,7 @@ To create a new list of timespans:
 	var t4 = time.Date(2018, 1, 30, 1, 30, 0, 0, time.UTC)
 	var now = time.Date(2018, 1, 30, 0, 0, 0, 0, time.UTC)
 
-	input := timespan.List{
+	input := timespan.Spans{
 		timespan.New(t1, t3),
 		timespan.New(t2, t4),
 	}

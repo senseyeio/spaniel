@@ -22,7 +22,7 @@ func TestTypedUnion(t *testing.T) {
 
 	for _, tt := range []struct {
 		name       string
-		a, b       timespan.T
+		a, b       timespan.Span
 		mergeTypes IntervalTypePair
 	}{
 		{
@@ -85,7 +85,7 @@ func TestTypedUnion(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			input := timespan.List{
+			input := timespan.Spans{
 				tt.a, tt.b,
 			}
 			merges := input.Union()
@@ -102,7 +102,7 @@ func TestTypedUnion(t *testing.T) {
 				t.Errorf("in order, merge end")
 			}
 
-			input = timespan.List{
+			input = timespan.Spans{
 				tt.b, tt.a,
 			}
 			merges = input.Union()
@@ -126,7 +126,7 @@ func TestTypedIntersection(t *testing.T) {
 
 	for _, tt := range []struct {
 		name              string
-		a, b              timespan.T
+		a, b              timespan.Span
 		intersectionTypes IntervalTypePair
 	}{
 		{
@@ -164,7 +164,7 @@ func TestTypedIntersection(t *testing.T) {
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			input := timespan.List{
+			input := timespan.Spans{
 				tt.a, tt.b,
 			}
 			intersections := input.Intersection()
@@ -180,7 +180,7 @@ func TestTypedIntersection(t *testing.T) {
 				t.Errorf("in order, intersection end")
 			}
 
-			input = timespan.List{
+			input = timespan.Spans{
 				tt.b, tt.a,
 			}
 			intersections = input.Intersection()

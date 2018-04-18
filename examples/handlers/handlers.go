@@ -15,22 +15,22 @@ type PropertyEvent struct {
 }
 
 // Start represents the start time of the property event.
-func (e *PropertyEvent) Start() time.Time {
+func (e PropertyEvent) Start() time.Time {
 	return e.start
 }
 
 // End represents the end time of the property event.
-func (e *PropertyEvent) End() time.Time {
+func (e PropertyEvent) End() time.Time {
 	return e.end
 }
 
 // StartType represents the type of the start of the interval (Closed in this case).
-func (e *PropertyEvent) StartType() timespan.EndPointType {
+func (e PropertyEvent) StartType() timespan.EndPointType {
 	return timespan.Closed
 }
 
 // EndType represents the type of the end of the interval (Open in this case).
-func (e *PropertyEvent) EndType() timespan.EndPointType {
+func (e PropertyEvent) EndType() timespan.EndPointType {
 	return timespan.Open
 }
 
@@ -63,12 +63,12 @@ func main() {
 	var t3 = time.Date(2018, 1, 30, 1, 0, 0, 0, time.UTC)
 	var t4 = time.Date(2018, 1, 30, 1, 30, 0, 0, time.UTC)
 
-	input := timespan.List{
+	input := timespan.Spans{
 		NewPropertyEvent(t1, t3, []string{"1"}),
 		NewPropertyEvent(t2, t4, []string{"2"}),
 	}
 
-	var mergeHandlerFunc timespan.MergeHandlerFunc = func(mergeInto, mergeFrom timespan.T, mergeSpan timespan.T) timespan.T {
+	var mergeHandlerFunc timespan.UnionHandlerFunc = func(mergeInto, mergeFrom, mergeSpan timespan.Span) timespan.Span {
 		a, ok := mergeInto.(*PropertyEvent)
 		if !ok {
 			panic(fmt.Sprintf("Expected mergeInto to be a PropertyEvent"))
@@ -82,7 +82,7 @@ func main() {
 		return NewPropertyEvent(mergeSpan.Start(), mergeSpan.End(), mergeProperties(a.Properties, b.Properties))
 	}
 
-	var intersectionHandlerFunc timespan.IntersectionHandlerFunc = func(intersectingEvent1, intersectingEvent2, intersectionSpan timespan.T) timespan.T {
+	var intersectionHandlerFunc timespan.IntersectionHandlerFunc = func(intersectingEvent1, intersectingEvent2, intersectionSpan timespan.Span) timespan.Span {
 		a, ok := intersectingEvent1.(*PropertyEvent)
 		if !ok {
 			panic(fmt.Errorf("Expected intersectingEvent1 to be a PropertyEvent"))

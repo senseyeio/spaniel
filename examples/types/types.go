@@ -15,7 +15,7 @@ func main() {
 	var t4 = time.Date(2018, 1, 30, 1, 30, 0, 0, time.UTC)
 	var t5 = time.Date(2018, 1, 30, 2, 0, 0, 0, time.UTC)
 
-	input := timespan.List{
+	input := timespan.Spans{
 		timespan.NewWithTypes(t1, t3, timespan.Open, timespan.Open),
 		timespan.NewWithTypes(t2, t4, timespan.Open, timespan.Open),
 	}
@@ -28,7 +28,7 @@ func main() {
 	fmt.Println("And there will be no intersections:")
 	fmt.Println(intersection)
 
-	input = timespan.List{
+	input = timespan.Spans{
 		timespan.NewWithTypes(t1, t3, timespan.Closed, timespan.Closed),
 		timespan.NewWithTypes(t3, t5, timespan.Closed, timespan.Closed),
 	}
@@ -40,7 +40,7 @@ func main() {
 	fmt.Println("And there will be an instantaneous intersection:")
 	fmt.Println(intersection)
 
-	input = timespan.List{
+	input = timespan.Spans{
 		timespan.NewWithTypes(t1, t3, timespan.Closed, timespan.Open),
 		timespan.NewWithTypes(t3, t5, timespan.Closed, timespan.Open),
 	}

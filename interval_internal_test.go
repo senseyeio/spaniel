@@ -15,7 +15,7 @@ var (
 func TestOpenedClosedSpans(t *testing.T) {
 	for _, tt := range []struct {
 		name               string
-		a, b               T
+		a, b               Span
 		expectedOverlap    bool
 		expectedContiguous bool
 	}{
@@ -119,7 +119,7 @@ func TestOpenedClosedSpans(t *testing.T) {
 func TestClosedOpenedSpans(t *testing.T) {
 	for _, tt := range []struct {
 		name               string
-		a, b               T
+		a, b               Span
 		expectedOverlap    bool
 		expectedContiguous bool
 	}{
@@ -224,7 +224,7 @@ func TestOpenedSpans(t *testing.T) {
 
 	for _, tt := range []struct {
 		name               string
-		a, b               T
+		a, b               Span
 		expectedOverlap    bool
 		expectedContiguous bool
 	}{
@@ -328,7 +328,7 @@ func TestOpenedSpans(t *testing.T) {
 func TestClosedSpans(t *testing.T) {
 	for _, tt := range []struct {
 		name               string
-		a, b               T
+		a, b               Span
 		expectedOverlap    bool
 		expectedContiguous bool
 	}{
