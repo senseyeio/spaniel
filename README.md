@@ -13,7 +13,7 @@ This package is "go-gettable", just do:
 
 ## Basics
 
-Spaniel operates on lists of timespans, where a timespan is represented as the interval between a start and end time. It has a built-in minimal timespan representation for convenience, or you can use your own type, so long as it implements the timespan.T interface.
+Spaniel operates on lists of timespans, where a timespan is represented as the interval between a start and end time. It has a built-in minimal timespan representation for convenience, or you can use your own type, so long as it implements the timespan.Span interface.
 
 To import spaniel and create a new list of timespans:
 
