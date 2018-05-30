@@ -39,6 +39,13 @@ func (s ByStart) Len() int           { return len(s) }
 func (s ByStart) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s ByStart) Less(i, j int) bool { return s[i].Start().Before(s[j].Start()) }
 
+// ByEnd sorts a list of spans by their end point
+type ByEnd Spans
+
+func (s ByEnd) Len() int           { return len(s) }
+func (s ByEnd) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s ByEnd) Less(i, j int) bool { return s[i].End().Before(s[j].End()) }
+
 // UnionHandlerFunc is used by UnionWithHandler to allow for custom functionality when two spans are merged.
 // It is passed the two spans to be merged, and span which will result from the union.
 type UnionHandlerFunc func(mergeInto, mergeFrom, mergeSpan Span) Span
