@@ -2,7 +2,6 @@ package spaniel_test
 
 import (
 	"reflect"
-	"fmt"
 	"sort"
 	"testing"
 	"time"
