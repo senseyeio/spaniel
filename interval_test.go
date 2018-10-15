@@ -395,3 +395,27 @@ func TestIntersection(t *testing.T) {
 		expectEqual(t, after, expected)
 	})
 }
+
+func TestIntersectionWith(t *testing.T) {
+	a := timespan.New(now, now.Add(time.Hour))
+	b := timespan.New(now.Add(2*time.Hour), now.Add(3*time.Hour))
+	c := timespan.New(now.Add(4*time.Hour), now.Add(5*time.Hour))
+
+	candidate := timespan.New(now.Add(45*time.Minute), now.Add(3*time.Hour))
+	events := timespan.Spans{a, b, c}
+	after := events.IntersectionWith(candidate)
+
+	t.Run("Should find overlap for partially overlapping", func(t *testing.T) {
+		expected := timespan.New(now.Add(45*time.Minute), now.Add(time.Hour))
+		expectEqual(t, after[0], expected)
+	})
+
+	t.Run("Should find overlap for totally overlapping", func(t *testing.T) {
+		expectEqual(t, after[1], b)
+	})
+
+	t.Run("Should indicate nil for non-overlapping", func(t *testing.T) {
+		var expected *timespan.TimeSpan
+		expectEqual(t, after[2], expected)
+	})
+}
