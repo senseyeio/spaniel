@@ -396,7 +396,7 @@ func TestIntersection(t *testing.T) {
 	})
 }
 
-func TestIntersectionWith(t *testing.T) {
+func TestIntersectionBetween(t *testing.T) {
 	a := timespan.New(now, now.Add(time.Hour))
 	b := timespan.New(now.Add(2*time.Hour), now.Add(3*time.Hour))
 	c := timespan.New(now, now.Add(5*time.Hour))
@@ -406,35 +406,35 @@ func TestIntersectionWith(t *testing.T) {
 
 	t.Run("Should return an intersection when there is an overlap", func(t *testing.T) {
 		events := timespan.Spans{a}
-		after := events.IntersectionWith(candidate)
+		after := events.IntersectionBetween(timespan.Spans{candidate})
 		expected := timespan.Spans{timespan.New(now.Add(45*time.Minute), now.Add(time.Hour))}
 		expectEqual(t, after, expected)
 	})
 
 	t.Run("Should return an intersection when a span is within the candidate", func(t *testing.T) {
 		events := timespan.Spans{b}
-		after := events.IntersectionWith(candidate)
+		after := events.IntersectionBetween(timespan.Spans{candidate})
 		expected := timespan.Spans{b}
 		expectEqual(t, after, expected)
 	})
 
 	t.Run("Should return an intersection when the candidate is within a span", func(t *testing.T) {
 		events := timespan.Spans{c}
-		after := events.IntersectionWith(candidate)
+		after := events.IntersectionBetween(timespan.Spans{candidate})
 		expected := timespan.Spans{candidate}
 		expectEqual(t, after, expected)
 	})
 
 	t.Run("Should return no intersections when the candidate does not overlap", func(t *testing.T) {
 		events := timespan.Spans{d}
-		after := events.IntersectionWith(candidate)
+		after := events.IntersectionBetween(timespan.Spans{candidate})
 		expected := timespan.Spans{}
 		expectEqual(t, after, expected)
 	})
 
 	t.Run("Should return multiple intersections", func(t *testing.T) {
 		events := timespan.Spans{a, b, c, d}
-		after := events.IntersectionWith(candidate)
+		after := events.IntersectionBetween(timespan.Spans{candidate})
 		expected := timespan.Spans{
 			timespan.New(now.Add(45*time.Minute), now.Add(time.Hour)),
 			b,
