@@ -2,6 +2,7 @@ package spaniel
 
 import (
 	"time"
+	"encoding/json"
 )
 
 // TimeSpan represents a simple span of time, with no additional properties. It should be constructed with NewEmpty.
