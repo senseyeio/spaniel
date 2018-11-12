@@ -47,6 +47,68 @@ func (ts TimeSpan) String() string {
 	return s
 }
 
+// MarshalJSON implements json.Marshal
+func (ts TimeSpan) MarshalJSON() ([]byte, error) {
+	o := struct {
+		Start         time.Time `json:"start"`
+		End           time.Time `json:"end"`
+		StartIncluded bool      `json:"start_included"`
+		EndIncluded   bool      `json:"end_included"`
+	}{
+		Start: ts.start,
+		End:   ts.end,
+	}
+
+	o.StartIncluded = endPointInclusionMarshal(ts.startType)
+	o.EndIncluded = endPointInclusionMarshal(ts.endType)
+
+	return json.Marshal(o)
+}
+
+// UnmarshalJSON implements json.Unmarshal
+func (ts *TimeSpan) UnmarshalJSON(b []byte) (err error) {
+	var i struct {
+		Start         time.Time `json:"start"`
+		End           time.Time `json:"end"`
+		StartIncluded bool      `json:"start_included"`
+		EndIncluded   bool      `json:"end_included"`
+	}
+
+	err = json.Unmarshal(b, &i)
+	if err != nil {
+		return err
+	}
+
+	ts.start = i.Start
+	ts.end = i.End
+	ts.startType = endPointIncluseionUnmarhsal(i.StartIncluded)
+	ts.endType = endPointIncluseionUnmarhsal(i.EndIncluded)
+
+	return
+}
+
+func endPointInclusionMarshal(e EndPointType) (included bool) {
+	switch e {
+	case Open:
+		included = false
+	case Closed:
+		included = true
+	}
+
+	return included
+}
+
+func endPointIncluseionUnmarhsal(b bool) (e EndPointType) {
+	switch b {
+	case true:
+		e = Closed
+	case false:
+		e = Open
+	}
+
+	return e
+}
+
 // NewWithTypes creates a span with just a start and end time, and associated types, and is used when no handlers are provided to Union or Intersection.
 func NewWithTypes(start, end time.Time, startType, endType EndPointType) *TimeSpan {
 	return &TimeSpan{start, end, startType, endType}
