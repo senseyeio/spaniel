@@ -293,26 +293,27 @@ func (s Spans) Intersection() Spans {
 	})
 }
 
-// IntersectionWith returns a list of pointers to Spans representing the overlaps between the contained spans
-// and a given span.
-func (s Spans) IntersectionWith(b Span) []*TimeSpan {
-	intersections := make([]*TimeSpan, len(s))
-
-	for i, a := range s {
-		if overlap(a, b) {
-			spanStart := getMax(EndPoint{a.Start(), a.StartType()}, EndPoint{b.Start(), b.StartType()})
-			spanEnd := getMin(EndPoint{a.End(), a.EndType()}, EndPoint{b.End(), b.EndType()})
-
-			if a.Start().Equal(b.Start()) {
-				spanStart.Type = getTightestIntervalType(a.StartType(), b.StartType())
-			}
-			if a.End().Equal(b.End()) {
-				spanEnd.Type = getTightestIntervalType(a.EndType(), b.EndType())
-			}
-			span := NewWithTypes(spanStart.Element, spanEnd.Element, spanStart.Type, spanEnd.Type)
-			intersections[i] = span
+// IntersectionBetweenWithHandler returns a list of pointers to Spans representing the overlaps between the contained spans
+// and a given set of spans.
+func (s Spans) IntersectionBetweenWithHandler(candidates Spans, intersectHandlerFunc IntersectionHandlerFunc) Spans {
+	intersections := Spans{}
+	for _, candidate := range candidates {
+		for _, span := range s {
+			i := Spans{candidate, span}.IntersectionWithHandler(func(a, b, s Span) Span {
+				if a == candidate {
+					return intersectHandlerFunc(a, b, s)
+				} else {
+					return intersectHandlerFunc(b, a, s)
+				}
+			})
+			intersections = append(intersections, i...)
 		}
 	}
-
 	return intersections
+}
+
+func (s Spans) IntersectionBetween(b Spans) Spans {
+	return s.IntersectionBetweenWithHandler(b, func(intersectingEvent1, intersectingEvent2, intersectionSpan Span) Span {
+		return intersectionSpan
+	})
 }
