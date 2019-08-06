@@ -294,7 +294,7 @@ func (s Spans) Intersection() Spans {
 }
 
 // IntersectionBetweenWithHandler returns a list of pointers to Spans representing the overlaps between the contained spans
-// and a given set of spans.
+// and a given set of spans. It calls intersectHandlerFunc for each pair of spans that are intersected.
 func (s Spans) IntersectionBetweenWithHandler(candidates Spans, intersectHandlerFunc IntersectionHandlerFunc) Spans {
 	intersections := Spans{}
 	for _, candidate := range candidates {
@@ -302,9 +302,9 @@ func (s Spans) IntersectionBetweenWithHandler(candidates Spans, intersectHandler
 			i := Spans{candidate, span}.IntersectionWithHandler(func(a, b, s Span) Span {
 				if a == candidate {
 					return intersectHandlerFunc(a, b, s)
-				} else {
-					return intersectHandlerFunc(b, a, s)
 				}
+
+				return intersectHandlerFunc(b, a, s)
 			})
 			intersections = append(intersections, i...)
 		}
@@ -312,6 +312,8 @@ func (s Spans) IntersectionBetweenWithHandler(candidates Spans, intersectHandler
 	return intersections
 }
 
+// IntersectionBetween returns the slice of spans representing the overlaps between the contained spans
+// and a given set of spans.
 func (s Spans) IntersectionBetween(b Spans) Spans {
 	return s.IntersectionBetweenWithHandler(b, func(intersectingEvent1, intersectingEvent2, intersectionSpan Span) Span {
 		return intersectionSpan
