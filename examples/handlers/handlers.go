@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	timespan "github.com/senseyeio/spaniel"
 	"sort"
 	"time"
+
+	timespan "github.com/senseyeio/spaniel"
 )
 
 // PropertyEvent represents an event with an associated list of property strings.

@@ -1,8 +1,8 @@
 package spaniel
 
 import (
-	"time"
 	"encoding/json"
+	"time"
 )
 
 // TimeSpan represents a simple span of time, with no additional properties. It should be constructed with NewEmpty.
@@ -82,32 +82,25 @@ func (ts *TimeSpan) UnmarshalJSON(b []byte) (err error) {
 
 	ts.start = i.Start
 	ts.end = i.End
-	ts.startType = endPointIncluseionUnmarhsal(i.StartIncluded)
-	ts.endType = endPointIncluseionUnmarhsal(i.EndIncluded)
+	ts.startType = endPointInclusionUnmarhsal(i.StartIncluded)
+	ts.endType = endPointInclusionUnmarhsal(i.EndIncluded)
 
 	return
 }
 
-func endPointInclusionMarshal(e EndPointType) (included bool) {
-	switch e {
-	case Open:
-		included = false
-	case Closed:
-		included = true
+func endPointInclusionMarshal(e EndPointType) bool {
+	if e == Open {
+		return false
 	}
 
-	return included
+	return true
 }
 
-func endPointIncluseionUnmarhsal(b bool) (e EndPointType) {
-	switch b {
-	case true:
-		e = Closed
-	case false:
-		e = Open
+func endPointInclusionUnmarhsal(b bool) EndPointType {
+	if b == true {
+		return Closed
 	}
-
-	return e
+	return Open
 }
 
 // NewWithTypes creates a span with just a start and end time, and associated types, and is used when no handlers are provided to Union or Intersection.

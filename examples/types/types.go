@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	timespan "github.com/senseyeio/spaniel"
 	"time"
+
+	timespan "github.com/senseyeio/spaniel"
 )
 
 func main() {
